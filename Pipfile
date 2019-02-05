@@ -9,6 +9,7 @@ verify_ssl = true
 flask = "*"
 marshmallow = "*"
 requests = "*"
+psutil = "*"
 
 [requires]
 python_version = "3.6"

@@ -1,4 +1,5 @@
-from marshmallow import Schema, fields, post_load
+#!/usr/bin/env python3
+from marshmallow import Schema, fields
 from app import app
 import string
 import random
@@ -92,7 +93,7 @@ class CampaignSchema(Schema):
     name = fields.Str()
     workspace_id = fields.Number()
     email = fields.Nested(EmailSchema, strict=True)
-    page = fields.Nested(PageSchema, strict=True, many=True)
+    pages = fields.Nested(PageSchema, strict=True, many=True)
     profile = fields.Nested(ProfileSchema, strict=True)
     targetlist = fields.Nested(ListSchema, strict=True)
     domain = fields.Nested(DomainSchema, strict=True)

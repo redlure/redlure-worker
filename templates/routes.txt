@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+from app import app
+from flask import request, jsonify, render_template
+
+url_1 = '$url1'
+url_2 = '$url2'
+url_3 = '$url3'
+url_4 = '$url4'
+url_5 = '$url5'
+rdirect_url = '$redirect_url'
+
+@app.route(url_1, methods=['GET', 'POST'])
+def url1():
+    return render_template(
+        '1.html'
+    )
