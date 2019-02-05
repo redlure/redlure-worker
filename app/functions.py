@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
+import sys
 import os
 from string import Template
-
+from functools import wraps
+from flask import request, abort
+sys.path.append('..')
+from config import Config
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+configs = Config
 
 
 def write_to_disk(campaign):
+    '''
+    Create a Flask app on disk with the data provided by the server
+    '''
     # create campaigns folder if it doesnt exist
     if not os.path.isdir(os.path.join(app_dir, 'campaigns')):
         os.mkdir(os.path.join(app_dir, 'campaigns'))
@@ -49,7 +57,16 @@ def write_to_disk(campaign):
             f.write(page['html'])
 
 
-
-    
+def require_api_key(f):
+    '''
+    Require an API key be provided to a function
+    '''
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if request.args.get('key') and request.args.get('key') == configs.API_KEY:
+            return f(*args, **kwargs)
+        else:
+            abort(401)
+    return wrap 
 
     
