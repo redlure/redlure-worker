@@ -2,11 +2,12 @@
 from app import app
 from flask import request, jsonify
 from app.models import CampaignSchema
-from app.functions import write_to_disk, require_api_key
+from helper.functions import write_to_disk, require_api_key
 import subprocess
 import os
 import signal
 import psutil
+import shutil
 
 subprocesses = {}
 
@@ -44,5 +45,15 @@ def kill():
     p = psutil.Process(proc.pid + 2)
 
     p.terminate()
+
+    # remove files from disk
+    shutil.rmtree('campaigns/%s' % id)
+
     return 'campaign killed'
+
+
+@app.route('/status')
+@require_api_key
+def status():
+    return 'responsive', 200
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from app import app
-from flask import request, jsonify, render_template
+from flask import request, jsonify, render_template, url_for, redirect
+from helper.functions import report_action
 
 url_1 = '$url1'
 url_2 = '$url2'
@@ -9,8 +10,72 @@ url_4 = '$url4'
 url_5 = '$url5'
 rdirect_url = '$redirect_url'
 
+
+@app.route('/<path:tracker>')
+@app.route('/')
+def index(tracker=''):
+    if tracker == '':
+        return redirect(url_for('url1'))
+    else:
+        return redirect('%s?id=%s' % (url_for('url1'), tracker))
+
+
 @app.route(url_1, methods=['GET', 'POST'])
 def url1():
+    id = request.args.get('id')
+    if id is not None:
+        report_action(id, 'Clicked')
+        
     return render_template(
         '1.html'
     )
+
+
+@app.route(url_2, methods=['GET', 'POST'])
+def url2():
+    id = request.args.get('id')
+    if id is not None:
+        # pass to server to log user click
+        pass
+    return render_template(
+        '2.html'
+    )
+
+@app.route(url_3, methods=['GET', 'POST'])
+def url3():
+    id = request.args.get('id')
+    if id is not None:
+        # pass to server to log user click
+        pass
+    return render_template(
+        '3.html'
+    )
+
+
+@app.route(url_4, methods=['GET', 'POST'])
+def url4():
+    id = request.args.get('id')
+    if id is not None:
+        # pass to server to log user click
+        pass
+    return render_template(
+        '4.html'
+    )
+
+
+@app.route(url_5, methods=['GET', 'POST'])
+def url5():
+    id = request.args.get('id')
+    if id is not None:
+        # pass to server to log user click
+        pass
+    return render_template(
+        '5.html'
+    )
+
+# for tracking email opens
+@app.route('/<tracker>/pixel.png')
+def pixel(tracker):
+    if tracker is not None:
+        report_action(tracker, 'Opened')
+    return app.send_static_file('pixel.png')

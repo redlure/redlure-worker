@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import sys
 import os
+import requests
 from string import Template
 from functools import wraps
 from flask import request, abort
+from shutil import copyfile
 sys.path.append('..')
 from config import Config
 
@@ -31,6 +33,9 @@ def write_to_disk(campaign):
         os.mkdir(os.path.join(campaign_dir, 'app'))
     if not os.path.isdir(os.path.join(campaign_dir, 'app', 'templates')):
         os.mkdir(os.path.join(campaign_dir, 'app', 'templates'))
+    if not os.path.isdir(os.path.join(campaign_dir, 'app', 'static')):
+        os.mkdir(os.path.join(campaign_dir, 'app', 'static'))
+    copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'pixel.png'))
 
      # create campaigns/<id>/app.py
     with open(os.path.join(campaign_dir, 'app.py'), 'w') as f:
@@ -44,7 +49,7 @@ def write_to_disk(campaign):
     # create campaigns/<id>/app/routes.py
     routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
 
-    values = {'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': ''}
+    values = {'url1': '/', 'url2': '/', 'url3': '/','url4': '/', 'url5': '/', 'redirect_url': '/'}
     values['url1'] = '/google'
 
     with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
@@ -67,6 +72,17 @@ def require_api_key(f):
             return f(*args, **kwargs)
         else:
             abort(401)
-    return wrap 
+    return wrap
+
+
+def report_action(tracker, action):
+    '''
+    Report a hit on /static/pixel.png for a target ID to the redlure server
+    '''
+    url = 'https://%s:%d/results/update' % (configs.SERVER_IP, configs.SERVER_PORT)
+    params = {'key': configs.API_KEY}
+    payload = {'tracker': tracker, 'action': action}
+    r = requests.post(url, data=payload, params=params, verify=False)
+
 
     
