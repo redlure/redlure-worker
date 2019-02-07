@@ -11,6 +11,7 @@ marshmallow = "*"
 requests = "*"
 psutil = "*"
 gunicorn = "*"
+certbot = "*"
 
 [requires]
 python_version = "3.6"

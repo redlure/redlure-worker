@@ -98,10 +98,7 @@ class CampaignSchema(Schema):
     targetlist = fields.Nested(ListSchema, strict=True)
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
+    port = fields.Number()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
 
-
-    #@post_load
-    #def make_campaign(self, data):
-    #    return Campaign(**data)

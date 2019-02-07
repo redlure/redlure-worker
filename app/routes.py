@@ -2,16 +2,16 @@
 from app import app
 from flask import request, jsonify
 from app.models import CampaignSchema
-from helper.functions import write_to_disk, require_api_key
+from helper.functions import write_to_disk, require_api_key, check_procs
 import subprocess
 import os
 import signal
 import psutil
 import shutil
+import shlex
 
-subprocesses = {}
 
-@app.route('/start', methods=['POST'])
+@app.route('/campaigns/start', methods=['POST'])
 @require_api_key
 def start():
     # get the json campaign object
@@ -21,30 +21,26 @@ def start():
 
     write_to_disk(campaign)
 
+    port = int(campaign[0]['port'])
+    existing_proc = check_procs(port)
+
+    if existing_proc is not None:
+        return '%s running in process %d' % (existing_proc.name(), existing_proc.pid), 400
+
     # start the subprocess running the campaigns flask server
     chdir = 'campaigns/%d' % campaign[0]['id']
-    proc = subprocess.Popen(['gunicorn', '--chdir', chdir, 'app:app', '-b 0.0.0.0:8080', '--daemon'])
-
-    # add the subprocess object to the dict, using campaign id as the key
-    global subprocesses
-    subprocesses[str(int(campaign[0]['id']))] = proc
+    subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
     return 'campaign started'
 
 
-@app.route('/kill', methods=['POST'])
+@app.route('/campaigns/kill', methods=['POST'])
 @require_api_key
 def kill():
-    # get the campaign id
-    id = str(request.form.get('id'))
+    # get the port the campaign is running on adn campaign id
+    port = int(request.form.get('port'))
+    id = request.form.get('id')
 
-    # get the subprocess objec to kill
-    proc = subprocesses.get(id)
-
-    # add 2 to the PID - tested on Ubuntu and Kali - for some reason the 
-    # actual process is a child or grandchild fof the dict process
-    p = psutil.Process(proc.pid + 2)
-
-    p.terminate()
+    check_procs(port, True)
 
     # remove files from disk
     shutil.rmtree('campaigns/%s' % id)
@@ -57,3 +53,10 @@ def kill():
 def status():
     return 'responsive', 200
 
+
+@app.route('/certificates/generate', methods=['POST'])
+@require_api_key
+def generate_cert():
+    domain = request.form.get('domain')
+    proc = subprocess.Popen(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain))
+    proc.wait()

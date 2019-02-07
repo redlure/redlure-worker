@@ -8,6 +8,8 @@ from flask import request, abort
 from shutil import copyfile
 sys.path.append('..')
 from config import Config
+import psutil
+from signal import SIGTERM
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 configs = Config
@@ -37,7 +39,7 @@ def write_to_disk(campaign):
         os.mkdir(os.path.join(campaign_dir, 'app', 'static'))
     copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'pixel.png'))
 
-     # create campaigns/<id>/app.py
+    # create campaigns/<id>/app.py
     with open(os.path.join(campaign_dir, 'app.py'), 'w') as f:
         f.write('#!/usr/bin/env python3\nfrom app import app')
 
@@ -82,7 +84,23 @@ def report_action(tracker, action):
     url = 'https://%s:%d/results/update' % (configs.SERVER_IP, configs.SERVER_PORT)
     params = {'key': configs.API_KEY}
     payload = {'tracker': tracker, 'action': action}
-    r = requests.post(url, data=payload, params=params, verify=False)
+    try:
+        r = requests.post(url, data=payload, params=params, verify=False)
+    except:
+        pass
+
+
+def check_procs(port, kill=False):
+    '''
+    Check if there is a procsess running on a specific port and optionallly, kill it
+    '''
+    for proc in psutil.process_iter():
+        for conns in proc.connections(kind='inet'):
+            if conns.laddr.port == port:
+                if kill:
+                    proc.send_signal(SIGTERM)
+                else:
+                    return proc
 
 
     
