@@ -26,10 +26,16 @@ def start():
 
     if existing_proc is not None:
         return '%s running in process %d' % (existing_proc.name(), existing_proc.pid), 400
+    
+    cert = campaign[0]['domain']['cert_path']
+    key = campaign[0]['domain']['key_path']
 
     # start the subprocess running the campaigns flask server
     chdir = 'campaigns/%d' % campaign[0]['id']
-    subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
+    if campaign[0]['ssl']:
+        subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
+    else:
+        subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
     return 'campaign started'
 
 
@@ -60,3 +66,4 @@ def generate_cert():
     domain = request.form.get('domain')
     proc = subprocess.Popen(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain))
     proc.wait()
+    return 'certs generated'

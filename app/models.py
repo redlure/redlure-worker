@@ -99,6 +99,7 @@ class CampaignSchema(Schema):
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
     port = fields.Number()
+    ssl = fields.Boolean()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
 
