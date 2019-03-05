@@ -33,9 +33,9 @@ def start():
     # start the subprocess running the campaigns flask server
     chdir = 'campaigns/%d' % campaign[0]['id']
     if campaign[0]['ssl']:
-        subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
+        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
     else:
-        subprocess.Popen(shlex.split('pipenv run gunicorn --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
+        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
     return 'campaign started'
 
 
