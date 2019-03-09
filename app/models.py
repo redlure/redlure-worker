@@ -62,6 +62,7 @@ class PageSchema(Schema):
     id = fields.Number()
     name = fields.Str()
     html = fields.Str()
+    url = fields.Str()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
 
@@ -91,15 +92,10 @@ class ServerSchema(Schema):
 class CampaignSchema(Schema):
     id = fields.Number()
     name = fields.Str()
-    workspace_id = fields.Number()
-    email = fields.Nested(EmailSchema, strict=True)
     pages = fields.Nested(PageSchema, strict=True, many=True)
-    profile = fields.Nested(ProfileSchema, strict=True)
-    targetlist = fields.Nested(ListSchema, strict=True)
+    redirect_url = fields.Str(allow_none=True)
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
     port = fields.Number()
     ssl = fields.Boolean()
-    created_at = fields.DateTime()
-    updated_at = fields.DateTime()
 

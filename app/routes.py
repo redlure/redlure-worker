@@ -67,3 +67,15 @@ def generate_cert():
     proc = subprocess.Popen(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain))
     proc.wait()
     return 'certs generated'
+
+
+@app.route('/processes/kill', methods=['POST'])
+@require_api_key
+def kill_process():
+    port = int(request.form.get('port'))
+    check_procs(port, kill=True)
+    proc = check_procs(port)
+    if proc:
+        return 'error kiling process', 400
+    else:
+        return 'process killed', 200

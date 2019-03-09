@@ -49,20 +49,24 @@ def write_to_disk(campaign):
         tmp = open(os.path.join(app_dir, 'templates', '__init__.txt')).read()
         f.write(tmp)
 
-    # create campaigns/<id>/app/routes.py
-    routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
-
-    values = {'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': 'https://google.com'}
-    values['url1'] = '/google'
-
-    with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
-        f.write(routes_template.substitute(values))
+    # value that will be replaced in the routing template
+    values = {'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': ''}
+    
+    if campaign[0]['redirect_url']:
+        values['redirect_url'] = campaign[0]['redirect_url']
 
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign[0]['pages']):
-        template_name = '%d.html' % (idx + 1)
+        str_idx = str(idx + 1)
+        values['url%s' % str_idx] = page['url']
+        template_name = '%s.html' % str_idx
         with open(os.path.join(campaign_dir, 'app', 'templates', template_name), 'w') as f:
             f.write(page['html'])
+
+    # create campaigns/<id>/app/routes.py
+    routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
+    with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
+        f.write(routes_template.substitute(values))
 
 
 def require_api_key(f):
