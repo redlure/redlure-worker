@@ -58,10 +58,10 @@ def write_to_disk(campaign):
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign[0]['pages']):
         str_idx = str(idx + 1)
-        values['url%s' % str_idx] = page['url']
+        values['url%s' % str_idx] = page['page']['url']
         template_name = '%s.html' % str_idx
         with open(os.path.join(campaign_dir, 'app', 'templates', template_name), 'w') as f:
-            f.write(page['html'])
+            f.write(page['page']['html'])
 
     # create campaigns/<id>/app/routes.py
     routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())

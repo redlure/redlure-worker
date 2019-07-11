@@ -89,10 +89,16 @@ class ServerSchema(Schema):
     port = fields.Number()
     status = fields.Str()
 
+
+class CampaignpagesSchema(Schema):
+    index = fields.Number()
+    page = fields.Nested(PageSchema, strict=True)
+
+
 class CampaignSchema(Schema):
     id = fields.Number()
     name = fields.Str()
-    pages = fields.Nested(PageSchema, strict=True, many=True)
+    pages = fields.Nested(CampaignpagesSchema, strict=True, many=True)
     redirect_url = fields.Str(allow_none=True)
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
