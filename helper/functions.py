@@ -50,10 +50,20 @@ def write_to_disk(campaign):
         f.write(tmp)
 
     # value that will be replaced in the routing template
-    values = {'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': ''}
+    values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': ''}
+
+    if campaign[0]['ssl']:
+        base_url = f'https://{campaign[0]["domain"]}:{int(campaign[0]["port"])}'
+    else:
+        #base_url = f'https://{campaign[0]["domain"]}:{int(campaign[0]["port"])}'
+        base_url = f'http://10.1.5.53:{int(campaign[0]["port"])}'
+    values['base_url'] = base_url
     
     if campaign[0]['redirect_url']:
         values['redirect_url'] = campaign[0]['redirect_url']
+
+    if campaign[0]['payload_url']:
+        values['payload'] = campaign[0]['redirect_url']
 
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign[0]['pages']):
