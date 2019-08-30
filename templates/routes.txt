@@ -3,6 +3,9 @@ from app import app
 from flask import request, jsonify, render_template, url_for, redirect
 from helper.functions import report_action, report_form
 
+# base url
+base_url = '$base_url'
+
 # first 4 urls can be custom set by user
 url_1 = '$url1'
 url_2 = '$url2'
@@ -15,7 +18,7 @@ if url_3 == '': url_3 = '/3'
 if url_4 == '': url_4 = '/4'
 
 # 5th url is just there to collet posted data and then redirect the victim
-url_5 = '%s/%s' % (url_4, '2')
+url_5 = f'{url_4}/2'
 redirect_url = '$redirect_url'
 
 
@@ -36,7 +39,7 @@ def url1():
         
     return render_template(
         '1.html',
-        next_url = url_for('url2', id=id)
+        next_url = f'{base_url}{url_for("url2", id=id)}'
     )
 
 
@@ -49,7 +52,7 @@ def url2():
     try:
         return render_template(
             '2.html',
-            next_url = url_for('url3', id=id)
+            next_url = f'{base_url}{url_for("url3", id=id)}'
         )
     except:
         return redirect(redirect_url)
@@ -67,7 +70,7 @@ def url3():
     try:
         return render_template(
             '3.html',
-            next_url = url_for('url4', id=id)
+            next_url = f'{base_url}{url_for("url4", id=id)}'
         )
     except:
         return redirect(redirect_url)
@@ -82,7 +85,7 @@ def url4():
     try:
         return render_template(
             '4.html',
-            next_url = url_for('url5', id=id)
+            next_url = f'{base_url}{url_for("url5", id=id)}'
         )
     except:
         return redirect(redirect_url)
