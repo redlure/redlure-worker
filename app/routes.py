@@ -9,15 +9,17 @@ import signal
 import psutil
 import shutil
 import shlex
+import json
 
 
 @app.route('/campaigns/start', methods=['POST'])
 @require_api_key
 def start():
     # get the json campaign object
-    json = request.get_json()[0]
+    print(request.get_json())
+    data = request.get_json()
     schema = CampaignSchema(strict=True)
-    campaign = schema.load(json)
+    campaign = schema.load(data)
 
     write_to_disk(campaign)
 
@@ -36,22 +38,25 @@ def start():
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
     else:
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
-    return 'campaign started'
+    return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
 @app.route('/campaigns/kill', methods=['POST'])
 @require_api_key
 def kill():
-    # get the port the campaign is running on adn campaign id
-    port = int(request.form.get('port'))
-    id = request.form.get('id')
+    try:
+        # get the port the campaign is running on adn campaign id
+        port = int(request.form.get('port'))
+        id = request.form.get('id')
 
-    check_procs(port, True)
+        check_procs(port, True)
 
-    # remove files from disk
-    shutil.rmtree('campaigns/%s' % id)
+        # remove files from disk
+        shutil.rmtree('campaigns/%s' % id)
 
-    return 'campaign killed'
+        return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
+    except:
+        return 'Error Killing Campaign', 400
 
 
 @app.route('/status')

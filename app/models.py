@@ -71,8 +71,8 @@ class DomainSchema(Schema):
     id = fields.Number()
     domain = fields.Str()
     ip = fields.Str()
-    cert_path = fields.Str()
-    key_path = fields.Str()
+    cert_path = fields.Str(allow_none=True)
+    key_path = fields.Str(allow_none=True)
 
 
 class ResultSchema(Schema):
@@ -104,4 +104,5 @@ class CampaignSchema(Schema):
     server = fields.Nested(ServerSchema, strict=True)
     port = fields.Number()
     ssl = fields.Boolean()
+    payload_url = fields.Str(allow_none=True)
 
