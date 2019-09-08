@@ -10,6 +10,8 @@ import psutil
 import shutil
 import shlex
 import json
+import socket
+from socket import AF_INET, SOCK_STREAM, SOCK_DGRAM
 
 
 @app.route('/campaigns/start', methods=['POST'])
@@ -84,3 +86,42 @@ def kill_process():
         return 'error kiling process', 400
     else:
         return 'process killed', 200
+
+
+@app.route('/processes/check')
+@require_api_key
+def check_listening():
+    AD = "-"
+    AF_INET6 = getattr(socket, 'AF_INET6', object())
+    proto_map = {
+        (AF_INET, SOCK_STREAM): 'tcp',
+        (AF_INET6, SOCK_STREAM): 'tcp6',
+        (AF_INET, SOCK_DGRAM): 'udp',
+        (AF_INET6, SOCK_DGRAM): 'udp6',
+    }
+
+    # code modded from https://github.com/giampaolo/psutil/blob/master/scripts/netstat.py
+    procs = []
+    # templ % ("Proto", "Local address", "Status", "PID", "Program name")
+    try:
+        proc_names = {}
+        for p in psutil.process_iter(attrs=['pid', 'name']):
+            proc_names[p.info['pid']] = p.info['name']
+        for c in psutil.net_connections(kind='inet'):
+            if c.status =='LISTEN':
+                laddr = "%s:%s" % (c.laddr)
+                raddr = ""
+                if c.raddr:
+                    raddr = "%s:%s" % (c.raddr)
+                procs.append(
+                    {
+                        'protocol': proto_map[(c.family, c.type)],
+                        'localaddr': laddr,
+                        'status': c.status,
+                        'pid': c.pid,
+                        'name': proc_names.get(c.pid, '?')[:15]
+                    }
+                )
+        return json.dumps({'success': True, 'data': procs}), 200, {'ContentType':'application/json'}
+    except:
+        return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
