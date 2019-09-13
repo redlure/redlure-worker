@@ -24,7 +24,7 @@ def write_to_disk(campaign):
     if not os.path.isdir(os.path.join(app_dir, 'campaigns')):
         os.mkdir(os.path.join(app_dir, 'campaigns'))
     
-    id = str(int(campaign[0]['id']))
+    id = str(int(campaign['id']))
     campaign_dir = os.path.join(app_dir, 'campaigns', id)
     
     # create campaign dir
@@ -52,21 +52,21 @@ def write_to_disk(campaign):
     # value that will be replaced in the routing template
     values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': ''}
 
-    if campaign[0]['ssl']:
-        base_url = f'https://{campaign[0]["domain"]}:{int(campaign[0]["port"])}'
+    if campaign['ssl']:
+        base_url = f'https://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
     else:
-        #base_url = f'https://{campaign[0]["domain"]}:{int(campaign[0]["port"])}'
-        base_url = f'http://10.1.5.53:{int(campaign[0]["port"])}'
+        base_url = f'http://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
+
     values['base_url'] = base_url
     
-    if campaign[0]['redirect_url']:
-        values['redirect_url'] = campaign[0]['redirect_url']
+    if campaign['redirect_url']:
+        values['redirect_url'] = campaign['redirect_url']
 
-    if campaign[0]['payload_url']:
-        values['payload'] = campaign[0]['redirect_url']
+    if campaign['payload_url']:
+        values['payload'] = campaign['redirect_url']
 
     # create templates in campaigns/<id>/templates
-    for idx, page in enumerate(campaign[0]['pages']):
+    for idx, page in enumerate(campaign['pages']):
         str_idx = str(idx + 1)
         values['url%s' % str_idx] = page['page']['url']
         template_name = '%s.html' % str_idx
@@ -133,4 +133,3 @@ def check_procs(port, kill=False):
                     return proc
 
 
-    

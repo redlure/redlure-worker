@@ -20,23 +20,23 @@ def start():
     # get the json campaign object
     print(request.get_json())
     data = request.get_json()
-    schema = CampaignSchema(strict=True)
+    schema = CampaignSchema()
     campaign = schema.load(data)
 
     write_to_disk(campaign)
 
-    port = int(campaign[0]['port'])
+    port = int(campaign['port'])
     existing_proc = check_procs(port)
 
     if existing_proc is not None:
         return '%s running in process %d' % (existing_proc.name(), existing_proc.pid), 400
     
-    cert = campaign[0]['domain']['cert_path']
-    key = campaign[0]['domain']['key_path']
+    cert = campaign['domain']['cert_path']
+    key = campaign['domain']['key_path']
 
     # start the subprocess running the campaigns flask server
-    chdir = 'campaigns/%d' % campaign[0]['id']
-    if campaign[0]['ssl']:
+    chdir = 'campaigns/%d' % campaign['id']
+    if campaign['ssl']:
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
     else:
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
@@ -71,9 +71,15 @@ def status():
 @require_api_key
 def generate_cert():
     domain = request.form.get('domain')
-    proc = subprocess.Popen(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain))
-    proc.wait()
-    return 'certs generated'
+    try:
+        proc = subprocess.run(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain), capture_output=True)
+        if b'not yet due for renewal' in proc.stdout:
+            return json.dumps({'success': False, 'msg': 'Certificate not due for renewal'}), 200, {'ContentType':'application/json'}
+        cert_path = f'/etc/letsencrypt/live/{domain}/cert.pem'
+        key_path = f'/etc/letsencrypt/live/{domain}/privkey.pem'
+        return json.dumps({'success': True, 'cert_path': cert_path, 'key_path': key_path}), 200, {'ContentType':'application/json'}
+    except Exception as e:
+        return json.dumps({'success': False, 'msg': 'Failed to generate certificates'}), 200, {'ContentType':'application/json'}
 
 
 @app.route('/processes/kill', methods=['POST'])
