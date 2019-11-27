@@ -40,6 +40,11 @@ def write_to_disk(campaign):
         os.mkdir(os.path.join(campaign_dir, 'app', 'static'))
     copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'pixel.png'))
 
+    # copy all files from the upload dir to the static folder
+    if os.path.isdir(configs.UPLOAD_FOLDER):
+        for file in os.listdir(configs.UPLOAD_FOLDER):
+            copyfile(os.path.join(configs.UPLOAD_FOLDER, file), os.path.join(campaign_dir, 'app', 'static', file))
+
     # create campaigns/<id>/app.py
     with open(os.path.join(campaign_dir, 'app.py'), 'w') as f:
         f.write('#!/usr/bin/env python3\nfrom app import app')

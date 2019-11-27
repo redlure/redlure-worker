@@ -12,7 +12,8 @@ import shlex
 import json
 import socket
 from socket import AF_INET, SOCK_STREAM, SOCK_DGRAM
-
+from werkzeug import secure_filename
+from config import Config
 
 @app.route('/campaigns/start', methods=['POST'])
 @require_api_key
@@ -29,14 +30,17 @@ def start():
     existing_proc = check_procs(port)
 
     if existing_proc is not None:
-        return '%s running in process %d' % (existing_proc.name(), existing_proc.pid), 400
-    
+        return json.dumps({'success': False, 'msg': f'Process {existing_proc.name()} using port {port} already'}), 200, {'ContentType':'application/json'}
+
     cert = campaign['domain']['cert_path']
     key = campaign['domain']['key_path']
 
     # start the subprocess running the campaigns flask server
     chdir = 'campaigns/%d' % campaign['id']
     if campaign['ssl']:
+        if not os.path.exists(cert) or not os.path.exists(key):
+            return json.dumps({'success': True, 'msg': 'Error accessing cert file or key file'}), 200, {'ContentType':'application/json'}
+
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
     else:
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
@@ -82,6 +86,20 @@ def generate_cert():
         return json.dumps({'success': False, 'msg': 'Failed to generate certificates'}), 200, {'ContentType':'application/json'}
 
 
+@app.route('/certificates/check', methods=['POST'])
+@require_api_key
+def check_certs():
+    cert_path = request.form.get('cert_path')
+    key_path = request.form.get('key_path')
+
+    cert_exists = os.path.isfile(cert_path)
+    key_exists = os.path.isfile(key_path)
+
+    if not cert_exists or not key_exists:
+        return json.dumps({'exists': False, 'msg': 'The specified cert path or key path does not exist on the file system'}), 200, {'ContentType': 'application/json'}
+    return json.dumps({'exists': True}), 200, {'ContentType':'application/json'}
+
+
 @app.route('/processes/kill', methods=['POST'])
 @require_api_key
 def kill_process():
@@ -92,6 +110,49 @@ def kill_process():
         return 'error kiling process', 400
     else:
         return 'process killed', 200
+
+
+@app.route('/files', methods=['GET', 'POST'])
+@require_api_key
+def upload_file():
+    if request.method == 'GET':
+        files = []
+        try:
+            files = os.listdir(Config.UPLOAD_FOLDER)
+        except:
+            pass
+        return json.dumps({'files': files}), 200, {'ContentType':'application/json'}
+    elif request.method == 'POST':
+        try:
+            file = request.files['file']
+            filename = request.form.get('Filename')
+            if file.filename == '':
+                return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+            if not os.path.isdir(Config.UPLOAD_FOLDER):
+                os.makedirs(os.path.join(Config.UPLOAD_FOLDER, ''))
+            filename = secure_filename(filename)
+            file.save(os.path.join(Config.UPLOAD_FOLDER, filename))
+            return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
+        except:
+            return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+
+
+@app.route('/files/delete', methods=['GET', 'POST'])
+@require_api_key
+def delete_file():
+    if request.method == 'GET':
+        try:
+            shutil.rmtree(Config.UPLOAD_FOLDER)
+        except Exception as e:
+            #print(e)
+            return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+    elif request.method == 'POST':
+        try:
+            filename = request.form.get('Filename')
+            os.remove(os.path.join(Config.UPLOAD_FOLDER, secure_filename(filename)))
+        except:
+            return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
 @app.route('/processes/check')

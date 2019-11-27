@@ -12,6 +12,7 @@ requests = "*"
 psutil = "*"
 gunicorn = "*"
 certbot = "*"
+werkzeug = "*"
 
 [requires]
 python_version = "3.7"
