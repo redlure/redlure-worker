@@ -11,6 +11,8 @@ url_1 = '$url1'
 url_2 = '$url2'
 url_3 = '$url3'
 url_4 = '$url4'
+payload_url = '$payload_url'
+payload_file = '$payload_file'
 
 if url_1 == '': url_1 = '/1'
 if url_2 == '': url_2 = '/2' 
@@ -56,9 +58,6 @@ def url2():
         )
     except:
         return redirect(redirect_url)
-    
-
-    
 
 
 @app.route(url_3, methods=['GET', 'POST'])
@@ -96,8 +95,15 @@ def url5():
     id = request.args.get('id')
     if request.form and id:
         report_form(id, request.form)
-        
     return redirect(redirect_url)
+
+
+@app.route(payload_url)
+def payload():
+    id = request.args.get('id')
+    if id:
+        report_action(id, 'Downloaded')
+    return app.send_static_file(payload_file)
 
 
 # for tracking email opens

@@ -105,4 +105,4 @@ class CampaignSchema(Schema):
     port = fields.Number()
     ssl = fields.Boolean()
     payload_url = fields.Str(allow_none=True)
-
+    payload_file = fields.Str(allow_none=True)

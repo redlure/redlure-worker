@@ -1,5 +1,5 @@
 class Config(object):
-    API_KEY = '314e2caccf7222916cc118029d0fcc9683bc0c881a1c6c78'
+    API_KEY = '79c943bef0de85d447b41afe05591f7f2ccb2bc9994074f8'
     CERT_PATH = 'redlure-cert.pem'
     KEY_PATH = 'redlure-key.pem'
     WORKER_PORT = 4445

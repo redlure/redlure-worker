@@ -23,10 +23,10 @@ def write_to_disk(campaign):
     # create campaigns folder if it doesnt exist
     if not os.path.isdir(os.path.join(app_dir, 'campaigns')):
         os.mkdir(os.path.join(app_dir, 'campaigns'))
-    
+
     id = str(int(campaign['id']))
     campaign_dir = os.path.join(app_dir, 'campaigns', id)
-    
+
     # create campaign dir
     if not os.path.isdir(campaign_dir):
         os.mkdir(campaign_dir)
@@ -55,7 +55,7 @@ def write_to_disk(campaign):
         f.write(tmp)
 
     # value that will be replaced in the routing template
-    values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': ''}
+    values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': '', 'payload_url': ''}
 
     if campaign['ssl']:
         base_url = f'https://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
@@ -63,12 +63,15 @@ def write_to_disk(campaign):
         base_url = f'http://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
 
     values['base_url'] = base_url
-    
+
     if campaign['redirect_url']:
         values['redirect_url'] = campaign['redirect_url']
 
-    if campaign['payload_url']:
-        values['payload'] = campaign['redirect_url']
+    if campaign['payload_url'] and campaign['payload_url'][:1] == '/':
+        values['payload_url'] = campaign['payload_url']
+
+    if campaign['payload_file']:
+        values['payload_file'] = campaign['payload_file']
 
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign['pages']):
