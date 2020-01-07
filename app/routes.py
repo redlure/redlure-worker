@@ -19,7 +19,7 @@ from config import Config
 @require_api_key
 def start():
     # get the json campaign object
-    print(request.get_json())
+    #print(request.get_json())
     data = request.get_json()
     schema = CampaignSchema()
     campaign = schema.load(data)

@@ -18,6 +18,7 @@ if url_1 == '': url_1 = '/1'
 if url_2 == '': url_2 = '/2' 
 if url_3 == '': url_3 = '/3'
 if url_4 == '': url_4 = '/4'
+if payload_url == '': payload_url = '/6'
 
 # 5th url is just there to collet posted data and then redirect the victim
 url_5 = f'{url_4}/2'

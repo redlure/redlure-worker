@@ -70,7 +70,7 @@ def write_to_disk(campaign):
     if campaign['payload_url'] and campaign['payload_url'][:1] == '/':
         values['payload_url'] = campaign['payload_url']
 
-    if campaign['payload_file']:
+    if 'payload_file' in campaign:
         values['payload_file'] = campaign['payload_file']
 
     # create templates in campaigns/<id>/templates
