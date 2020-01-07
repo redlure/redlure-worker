@@ -12,14 +12,16 @@ def gen_certs():
     proc.wait()
 
 if __name__ == '__main__':
-    configs = Config
+    if Config.API_KEY == '' or Config.SERVER_IP == '':
+        print('[!] API_KEY and SERVER_IP attributes required to be set in config.py')
+        exit()
 
     # generate certs if they dont exist
-    ssl = (configs.CERT_PATH, configs.KEY_PATH)
+    ssl = (Config.CERT_PATH, Config.KEY_PATH)
     if ssl == ('redlure-cert.pem', 'redlure-key.pem'):
         if not os.path.isfile('redlure-cert.pem') or not os.path.isfile('redlure-key.pem'):
             gen_certs()
-    
+
     # start the server
     #subprocess.Popen(['gunicorn', 'redlure-worker:app', '-b 0.0.0.0:8000', '--certfile', 'redlure-cert.pem', '--keyfile', 'redlure-key.pem'])
     app.run(debug=True, host='0.0.0.0', port=configs.WORKER_PORT, ssl_context=ssl)
