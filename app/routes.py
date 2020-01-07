@@ -76,7 +76,7 @@ def status():
 def generate_cert():
     domain = request.form.get('domain')
     try:
-        proc = subprocess.run(shlex.split('certbot certonly --standalone -d %s --non-interactive' % domain), capture_output=True)
+        proc = subprocess.run(shlex.split('certbot certonly --standalone -d %s --non-interactive --register-unsafely-without-email --agree-tos' % domain), capture_output=True)
         if b'not yet due for renewal' in proc.stdout:
             return json.dumps({'success': False, 'msg': 'Certificate not due for renewal'}), 200, {'ContentType':'application/json'}
         cert_path = f'/etc/letsencrypt/live/{domain}/cert.pem'
