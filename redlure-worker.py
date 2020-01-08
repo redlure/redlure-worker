@@ -24,4 +24,4 @@ if __name__ == '__main__':
 
     # start the server
     #subprocess.Popen(['gunicorn', 'redlure-worker:app', '-b 0.0.0.0:8000', '--certfile', 'redlure-cert.pem', '--keyfile', 'redlure-key.pem'])
-    app.run(debug=True, host='0.0.0.0', port=configs.WORKER_PORT, ssl_context=ssl)
+    app.run(debug=True, host='0.0.0.0', port=Config.WORKER_PORT, ssl_context=ssl)
