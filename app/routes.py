@@ -65,7 +65,7 @@ def kill():
         return 'Error Killing Campaign', 400
 
 
-@app.route('/status')
+@app.route('/status', methods=['POST'])
 @require_api_key
 def status():
     return 'responsive', 200
@@ -112,50 +112,56 @@ def kill_process():
         return 'process killed', 200
 
 
-@app.route('/files', methods=['GET', 'POST'])
+@app.route('/files', methods=['POST'])
+@require_api_key
+def get_files():
+    files = []
+    try:
+        files = os.listdir(Config.UPLOAD_FOLDER)
+    except:
+        pass
+    return json.dumps({'files': files}), 200, {'ContentType':'application/json'}
+
+
+@app.route('/files/upload', methods=['POST'])
 @require_api_key
 def upload_file():
-    if request.method == 'GET':
-        files = []
-        try:
-            files = os.listdir(Config.UPLOAD_FOLDER)
-        except:
-            pass
-        return json.dumps({'files': files}), 200, {'ContentType':'application/json'}
-    elif request.method == 'POST':
-        try:
-            file = request.files['file']
-            filename = request.form.get('Filename')
-            if file.filename == '':
-                return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
-            if not os.path.isdir(Config.UPLOAD_FOLDER):
-                os.makedirs(os.path.join(Config.UPLOAD_FOLDER, ''))
-            filename = secure_filename(filename)
-            file.save(os.path.join(Config.UPLOAD_FOLDER, filename))
-            return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
-        except:
+    try:
+        file = request.files['file']
+        filename = request.form.get('Filename')
+        if file.filename == '':
             return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+        if not os.path.isdir(Config.UPLOAD_FOLDER):
+            os.makedirs(os.path.join(Config.UPLOAD_FOLDER, ''))
+        filename = secure_filename(filename)
+        file.save(os.path.join(Config.UPLOAD_FOLDER, filename))
+        return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
+    except:
+        return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
 
 
-@app.route('/files/delete', methods=['GET', 'POST'])
+@app.route('/files/deleteall', methods=['POST'])
 @require_api_key
-def delete_file():
-    if request.method == 'GET':
-        try:
-            shutil.rmtree(Config.UPLOAD_FOLDER)
-        except Exception as e:
-            #print(e)
-            return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
-    elif request.method == 'POST':
-        try:
-            filename = request.form.get('Filename')
-            os.remove(os.path.join(Config.UPLOAD_FOLDER, secure_filename(filename)))
-        except:
-            return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+def delete_all_file():
+    try:
+        shutil.rmtree(Config.UPLOAD_FOLDER)
+    except Exception as e:
+        return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
     return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
-@app.route('/processes/check')
+@app.route('/files/delete', methods=['POST'])
+@require_api_key
+def delete_file():
+    try:
+        filename = request.form.get('Filename')
+        os.remove(os.path.join(Config.UPLOAD_FOLDER, secure_filename(filename)))
+    except:
+        return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
+
+
+@app.route('/processes/check', methods=['POST'])
 @require_api_key
 def check_listening():
     AD = "-"
