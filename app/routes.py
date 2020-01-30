@@ -19,7 +19,6 @@ from config import Config
 @require_api_key
 def start():
     # get the json campaign object
-    #print(request.get_json())
     data = request.get_json()
     schema = CampaignSchema()
     campaign = schema.load(data)
@@ -27,23 +26,30 @@ def start():
     write_to_disk(campaign)
 
     port = int(campaign['port'])
+    id = campaign['id']
     existing_proc = check_procs(port)
 
     if existing_proc is not None:
-        return json.dumps({'success': False, 'msg': f'Process {existing_proc.name()} using port {port} already'}), 200, {'ContentType':'application/json'}
+        app.logger.warning(f'Could not bind campaign {id} to port {port}. Campaign {id} did not start')
+        shutil.rmtree('campaigns/%s' % str(int(id)))
+        return json.dumps({'success': False, 'msg': f'Failed: Process {existing_proc.name()} using port {port} already'}), 200, {'ContentType':'application/json'}
 
     cert = campaign['domain']['cert_path']
     key = campaign['domain']['key_path']
 
-    # start the subprocess running the campaigns flask server
+    # start the subprocess running the campaign's gunicorn server
     chdir = 'campaigns/%d' % campaign['id']
     if campaign['ssl']:
         if not os.path.exists(cert) or not os.path.exists(key):
-            return json.dumps({'success': True, 'msg': 'Error accessing cert file or key file'}), 200, {'ContentType':'application/json'}
-
+            app.logger.warning(f'Failed to start campaign {id}. Error accessing cert file {cert} or key file {key}')
+            shutil.rmtree('campaigns/%s' % str(int(id)))
+            return json.dumps({'success': False, 'msg': 'Failed: Error accessing cert/key files'}), 200, {'ContentType':'application/json'}
+        app.logger.info(f'Starting campaign {id} with SSL on port {port}')
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
     else:
+        app.logger.info(f'Starting campaign {id} without SSL on port {port}')
         subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
+
     return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
@@ -59,15 +65,17 @@ def kill():
 
         # remove files from disk
         shutil.rmtree('campaigns/%s' % id)
-
+        app.logger.info(f'Campaign {id} killed and campaign directory deleted')
         return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
-    except:
+    except Exception as e:
+        app.logger.error(f'Error killing campaign {id} and removing files')
         return 'Error Killing Campaign', 400
 
 
 @app.route('/status', methods=['POST'])
 @require_api_key
 def status():
+    app.logger.info('Returned positive connection status')
     return 'responsive', 200
 
 
@@ -78,12 +86,18 @@ def generate_cert():
     try:
         proc = subprocess.run(shlex.split('certbot certonly --standalone -d %s --non-interactive --register-unsafely-without-email --agree-tos' % domain), capture_output=True)
         if b'not yet due for renewal' in proc.stdout:
+            app.logger.info(f'Attemped to renew cert for {domain} but not yet due for renewal')
             return json.dumps({'success': False, 'msg': 'Certificate not due for renewal'}), 200, {'ContentType':'application/json'}
-        cert_path = f'/etc/letsencrypt/live/{domain}/cert.pem'
-        key_path = f'/etc/letsencrypt/live/{domain}/privkey.pem'
-        return json.dumps({'success': True, 'cert_path': cert_path, 'key_path': key_path}), 200, {'ContentType':'application/json'}
+        elif b'Congratulations!' in proc.stdout:
+            cert_path = f'/etc/letsencrypt/live/{domain}/cert.pem'
+            key_path = f'/etc/letsencrypt/live/{domain}/privkey.pem'
+            return json.dumps({'success': True, 'cert_path': cert_path, 'key_path': key_path}), 200, {'ContentType':'application/json'}
+        else:
+            app.logger.warning(f'Failed to generate certificates for {domain}')
+            return json.dumps({'success': False, 'msg': 'Failed to generate certificates'}), 200, {'ContentType':'application/json'}
     except Exception as e:
-        return json.dumps({'success': False, 'msg': 'Failed to generate certificates'}), 200, {'ContentType':'application/json'}
+        app.logger.error(f'Error generating certificates for {domain} - {e}')
+        return json.dumps({'success': False, 'msg': 'Error generating certificates'}), 200, {'ContentType':'application/json'}
 
 
 @app.route('/certificates/check', methods=['POST'])
@@ -96,6 +110,7 @@ def check_certs():
     key_exists = os.path.isfile(key_path)
 
     if not cert_exists or not key_exists:
+        app.logger.warning(f'Key file {key_path} or cert file {cert_path} not found')
         return json.dumps({'exists': False, 'msg': 'The specified cert path or key path does not exist on the file system'}), 200, {'ContentType': 'application/json'}
     return json.dumps({'exists': True}), 200, {'ContentType':'application/json'}
 
@@ -109,6 +124,7 @@ def kill_process():
     if proc:
         return 'error kiling process', 400
     else:
+        app.logger.info(f'Process running on {port} killed')
         return 'process killed', 200
 
 
@@ -118,8 +134,9 @@ def get_files():
     files = []
     try:
         files = os.listdir(Config.UPLOAD_FOLDER)
-    except:
-        pass
+    except Exception as e:
+        app.logger.error(f'Error listing {Config.UPLOAD_FOLDER} - {e}')
+    app.logger.info(f'Returned listing of {Config.UPLOAD_FOLDER}')
     return json.dumps({'files': files}), 200, {'ContentType':'application/json'}
 
 
@@ -132,11 +149,14 @@ def upload_file():
         if file.filename == '':
             return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
         if not os.path.isdir(Config.UPLOAD_FOLDER):
+            app.logger.info(f'Made directory {Config.UPLOAD_FOLDER}')
             os.makedirs(os.path.join(Config.UPLOAD_FOLDER, ''))
         filename = secure_filename(filename)
         file.save(os.path.join(Config.UPLOAD_FOLDER, filename))
+        app.logger.info(f'Wrote file {filename} to {Config.UPLOAD_FOLDER}')
         return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
-    except:
+    except Exception as e:
+        app.logger.error(f'Error writing file {filename} to {Config.UPLOAD_FOLDER} - {e}')
         return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
 
 
@@ -146,7 +166,9 @@ def delete_all_file():
     try:
         shutil.rmtree(Config.UPLOAD_FOLDER)
     except Exception as e:
+        app.logger.error(f'Error deleting all files from {Config.UPLOAD_FOLDER} - {e}')
         return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+    app.logger.info(f'All files deleted from {Config.UPLOAD_FOLDER}')
     return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
@@ -156,8 +178,10 @@ def delete_file():
     try:
         filename = request.form.get('Filename')
         os.remove(os.path.join(Config.UPLOAD_FOLDER, secure_filename(filename)))
-    except:
+    except Exception as e:
+        app.logger.error(f'Error deleting file {filename} from {Config.UPLOAD_FOLDER} - {e}')
         return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
+    app.logger.info(f'Deleted file {filename} from {Config.UPLOAD_FOLDER}')
     return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
 
@@ -195,6 +219,8 @@ def check_listening():
                         'name': proc_names.get(c.pid, '?')[:15]
                     }
                 )
+        app.logger.info('Returned listening processes')
         return json.dumps({'success': True, 'data': procs}), 200, {'ContentType':'application/json'}
-    except:
+    except Exception as e:
+        app.logger.error(f'Error checking listening processes - {e}')
         return json.dumps({'success': False}), 200, {'ContentType':'application/json'}
