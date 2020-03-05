@@ -100,20 +100,20 @@ def require_api_key(f):
     return wrap
 
 
-def report_action(tracker, action):
+def report_action(tracker, action, ip):
     '''
     Report a hit on /static/pixel.png for a target ID to the redlure server
     '''
     url = 'https://%s:%d/results/update' % (configs.SERVER_IP, configs.SERVER_PORT)
     params = {'key': configs.API_KEY}
-    payload = {'tracker': tracker, 'action': action}
+    payload = {'tracker': tracker, 'action': action, 'ip': ip}
     try:
         r = requests.post(url, data=payload, params=params, verify=False)
     except:
         pass
 
 
-def report_form(tracker, form_data):
+def report_form(tracker, form_data, ip):
     '''
     Report a form submission with a target ID to the redlure server
     '''
@@ -121,7 +121,7 @@ def report_form(tracker, form_data):
     data = json.dumps(form_data.to_dict(flat=False))
     url = 'https://%s:%d/results/form' % (configs.SERVER_IP, configs.SERVER_PORT)
     params = {'key': configs.API_KEY}
-    payload = {'tracker': tracker, 'data': data}
+    payload = {'tracker': tracker, 'data': data, 'ip': ip}
     try:
         r = requests.post(url, data=payload, params=params, verify=False)
     except:
