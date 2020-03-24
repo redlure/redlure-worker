@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-import sys
-import os
-import requests
-from string import Template
-from functools import wraps
-from flask import request, abort
-from shutil import copyfile
-sys.path.append('..')
 from config import Config
+import os
+from functools import wraps
+from shutil import copyfile
+from flask import request, abort
+from string import Template
 import psutil
 from signal import SIGTERM
-import json
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-configs = Config
 
 
 def write_to_disk(campaign):
@@ -41,9 +36,9 @@ def write_to_disk(campaign):
     copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'pixel.png'))
 
     # copy all files from the upload dir to the static folder
-    if os.path.isdir(configs.UPLOAD_FOLDER):
-        for file in os.listdir(configs.UPLOAD_FOLDER):
-            copyfile(os.path.join(configs.UPLOAD_FOLDER, file), os.path.join(campaign_dir, 'app', 'static', file))
+    if os.path.isdir(Config.UPLOAD_FOLDER):
+        for file in os.listdir(Config.UPLOAD_FOLDER):
+            copyfile(os.path.join(Config.UPLOAD_FOLDER, file), os.path.join(campaign_dir, 'app', 'static', file))
 
     # create campaigns/<id>/app.py
     with open(os.path.join(campaign_dir, 'app.py'), 'w') as f:
@@ -93,39 +88,11 @@ def require_api_key(f):
     '''
     @wraps(f)
     def wrap(*args, **kwargs):
-        if request.args.get('key') and request.args.get('key') == configs.API_KEY:
+        if request.args.get('key') and request.args.get('key') == Config.API_KEY:
             return f(*args, **kwargs)
         else:
             abort(401)
     return wrap
-
-
-def report_action(tracker, action, ip):
-    '''
-    Report a hit on /static/pixel.png for a target ID to the redlure server
-    '''
-    url = 'https://%s:%d/results/update' % (configs.SERVER_IP, configs.SERVER_PORT)
-    params = {'key': configs.API_KEY}
-    payload = {'tracker': tracker, 'action': action, 'ip': ip}
-    try:
-        r = requests.post(url, data=payload, params=params, verify=False)
-    except:
-        pass
-
-
-def report_form(tracker, form_data, ip):
-    '''
-    Report a form submission with a target ID to the redlure server
-    '''
-    print('sending form data')
-    data = json.dumps(form_data.to_dict(flat=False))
-    url = 'https://%s:%d/results/form' % (configs.SERVER_IP, configs.SERVER_PORT)
-    params = {'key': configs.API_KEY}
-    payload = {'tracker': tracker, 'data': data, 'ip': ip}
-    try:
-        r = requests.post(url, data=payload, params=params, verify=False)
-    except:
-        pass
 
 
 def check_procs(port, kill=False):
@@ -139,5 +106,3 @@ def check_procs(port, kill=False):
                     proc.send_signal(SIGTERM)
                 else:
                     return proc
-
-

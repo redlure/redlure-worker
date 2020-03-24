@@ -3,12 +3,7 @@ from app import app
 from flask import request, jsonify, render_template, url_for, redirect, Markup
 import os
 import sys
-
-p = os.path.abspath('../..')
-if p not in sys.path:
-    sys.path.append(p)
-
-from helper.functions import report_action, report_form
+from functions import report_action, report_form
 
 # base url
 base_url = '$base_url'
