@@ -49,6 +49,11 @@ def write_to_disk(campaign):
         tmp = open(os.path.join(app_dir, 'templates', '__init__.txt')).read()
         f.write(tmp)
 
+    # create campaigns/<id>/app/functions.py
+    with open(os.path.join(campaign_dir, 'app', 'functions.py'), 'w') as f:
+        tmp = open(os.path.join(app_dir, 'templates', 'functions.txt')).read()
+        f.write(tmp)
+
     # value that will be replaced in the routing template
     values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': '', 'payload_url': ''}
 

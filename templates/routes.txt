@@ -3,7 +3,7 @@ from app import app
 from flask import request, jsonify, render_template, url_for, redirect, Markup
 import os
 import sys
-from functions import report_action, report_form
+from app.functions import report_action, report_form
 
 # base url
 base_url = '$base_url'
