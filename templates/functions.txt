@@ -1,6 +1,9 @@
 import requests
 import sys
+import os
+import json
 
+# edit path to import the Config class from the parent app
 p = os.path.abspath('../..')
 if p not in sys.path:
     sys.path.append(p)
@@ -8,9 +11,10 @@ if p not in sys.path:
 from config import Config
 
 
+# report email open, click, or download to the redlure-console
 def report_action(tracker, action, ip):
     '''
-    Report a hit on /static/pixel.png for a target ID to the redlure server
+    Report a hit on /static/pixel.png or a click for a target ID to the redlure server
     '''
     url = 'https://%s:%d/results/update' % (Config.SERVER_IP, Config.SERVER_PORT)
     params = {'key': Config.API_KEY}
@@ -21,6 +25,7 @@ def report_action(tracker, action, ip):
         pass
 
 
+# report form data to the redlure-console
 def report_form(tracker, form_data, ip):
     '''
     Report a form submission with a target ID to the redlure server

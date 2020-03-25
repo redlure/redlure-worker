@@ -15,6 +15,9 @@ def write_to_disk(campaign):
     '''
     Create a Flask app on disk with the data provided by the server
     '''
+    # will hold the contents of campaigns/<id>/app/routes.txt
+    routes_content = 'from app import app\nfrom flask import request, jsonify, render_template, url_for, redirect, Markup\nimport os\nimport sys\nfrom app.functions import report_action, report_form'
+
     # create campaigns folder if it doesnt exist
     if not os.path.isdir(os.path.join(app_dir, 'campaigns')):
         os.mkdir(os.path.join(app_dir, 'campaigns'))
@@ -54,37 +57,88 @@ def write_to_disk(campaign):
         tmp = open(os.path.join(app_dir, 'templates', 'functions.txt')).read()
         f.write(tmp)
 
-    # value that will be replaced in the routing template
-    values = {'base_url': '', 'url1': '', 'url2': '', 'url3': '','url4': '', 'url5': '', 'redirect_url': '', 'payload_url': '', 'payload_url': ''}
-
+    # create base url depending on SSL use
     if campaign['ssl']:
         base_url = f'https://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
     else:
         base_url = f'http://{campaign["domain"]["domain"]}:{int(campaign["port"])}'
 
-    values['base_url'] = base_url
+    # add base url to routes
+    routes_content += f'\n\nbase_url = \'{base_url}\''
 
+    # add redirect url into to routes if used
     if campaign['redirect_url']:
-        values['redirect_url'] = campaign['redirect_url']
+        routes_content += f'\nredirect_url = \'{campaign["redirect_url"]}\''
 
-    if campaign['payload_url'] and campaign['payload_url'][:1] == '/':
-        values['payload_url'] = campaign['payload_url']
+    # check if payload is being used
+    uses_payload = False
+    if campaign['payload_url'] and campaign['payload_url'][:1] == '/' and 'payload_file' in campaign:
+        uses_payload = True
+    
+    # add payload variables (route is written later)
+    if uses_payload:
+        routes_content += f'\npayload_url = \'{campaign["payload_url"]}\''
+        routes_content += f'\npayload_file = \'{campaign["payload_file"]}\''
 
-    if 'payload_file' in campaign:
-        values['payload_file'] = campaign['payload_file']
+    # add url definitions for routing
+    for idx, page in enumerate(campaign['pages']):
+        routes_content = f'\nurl_{idx + 1} = \'{page["page"]["url"]}\'''
+
+    # add 1 extra url route for form collection/redirect
+    page_count = len(campaign['pages']) + 1
+    routes_content += f'\nurl_{page_count} = url_{page_count - 1}/2'
 
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign['pages']):
-        str_idx = str(idx + 1)
-        values['url%s' % str_idx] = page['page']['url']
-        template_name = '%s.html' % str_idx
+        routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
+        routes_content += f'\ndef url{idx + 1}():'
+        routes_content += '\n\tid = request.args.get(\'id\')'
+        
+        # if first route, report clicks
+        if idx == 0:
+            routes_content += '\n\tif id is not None:'
+            routes_content += '\n\t\treport_action(id, \'Clicked\', request.remote_addr)'
+        # else report form submissions
+        else:
+            routes_content += '\n\tif request.form:'
+            routes_content += '\n\t\treport_form(id, request.form, request.remote_addr)'
+        
+        
+        routes_content += f'\n\nreturn render_template({idx + 1}.html, next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
+
+        # write html template file
+        template_name = f'{idx + 1}.html'
         with open(os.path.join(campaign_dir, 'app', 'templates', template_name), 'w') as f:
             f.write(page['page']['html'])
+
+    # write extra route for form collection/redirect
+    routes_content += f'\n\n\n@app.route(url_{page_count}, methods=[\'POST\'])'
+    routes_content += f'\ndef url{page_count}():'
+    routes_content += '\n\tid = request.args.get(\'id\')'
+    routes_content += '\n\tif request.form:'
+    routes_content += '\n\t\treport_form(id, request.form, request.remote_addr)'
+    routes_content += f'\n\nreturn redirect()'
+
+    # write route for tracking email opens
+    routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
+    routes_content += '\ndef pixel(tracker):'
+    routes_content += '\n\tif tracker is not None:'
+    routes_content += '\n\t\treport_action(tracker, \'Opened\', request.remote_addr)'
+    routes_content += '\n\treturn app.send_static_file(\'pixel.png\')'
+
+    # if payload used, app route to deliver payload
+    if uses_payload:
+        routes_content += '\n\n\n@app.route(payload_url)'
+        routes_content += '\ndef payload():'
+        routes_content += '\n\tid = request.args.get(\'id\')'
+        routes_content += '\n\tif id is not None:'
+        routes_content += '\n\t\treport_action(id, \'Downloaded\', request.remote_addr)'
+        routes_content += '\n\treturn app.send_static_file(payload_file)'
 
     # create campaigns/<id>/app/routes.py
     routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
     with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
-        f.write(routes_template.substitute(values))
+        f.write(routes_content)
 
 
 def require_api_key(f):
@@ -111,3 +165,4 @@ def check_procs(port, kill=False):
                     proc.send_signal(SIGTERM)
                 else:
                     return proc
+
