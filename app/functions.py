@@ -82,7 +82,7 @@ def write_to_disk(campaign):
 
     # add url definitions for routing
     for idx, page in enumerate(campaign['pages']):
-        routes_content = f'\nurl_{idx + 1} = \'{page["page"]["url"]}\'''
+        routes_content += f'\nurl_{idx + 1} = \'{page["page"]["url"]}\''
 
     # add 1 extra url route for form collection/redirect
     page_count = len(campaign['pages']) + 1
@@ -92,19 +92,19 @@ def write_to_disk(campaign):
     for idx, page in enumerate(campaign['pages']):
         routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
         routes_content += f'\ndef url{idx + 1}():'
-        routes_content += '\n\tid = request.args.get(\'id\')'
+        routes_content += '\n    id = request.args.get(\'id\')'
         
         # if first route, report clicks
         if idx == 0:
-            routes_content += '\n\tif id is not None:'
-            routes_content += '\n\t\treport_action(id, \'Clicked\', request.remote_addr)'
+            routes_content += '\n    if id is not None:'
+            routes_content += '\n        report_action(id, \'Clicked\', request.remote_addr)'
         # else report form submissions
         else:
-            routes_content += '\n\tif request.form:'
-            routes_content += '\n\t\treport_form(id, request.form, request.remote_addr)'
+            routes_content += '\n    if request.form:'
+            routes_content += '\n        report_form(id, request.form, request.remote_addr)'
         
         
-        routes_content += f'\n\nreturn render_template({idx + 1}.html, next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
+        routes_content += f'\n\n    return render_template({idx + 1}.html, next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
 
         # write html template file
         template_name = f'{idx + 1}.html'
@@ -114,29 +114,28 @@ def write_to_disk(campaign):
     # write extra route for form collection/redirect
     routes_content += f'\n\n\n@app.route(url_{page_count}, methods=[\'POST\'])'
     routes_content += f'\ndef url{page_count}():'
-    routes_content += '\n\tid = request.args.get(\'id\')'
-    routes_content += '\n\tif request.form:'
-    routes_content += '\n\t\treport_form(id, request.form, request.remote_addr)'
+    routes_content += '\n    id = request.args.get(\'id\')'
+    routes_content += '\n    if request.form:'
+    routes_content += '\n        report_form(id, request.form, request.remote_addr)'
     routes_content += f'\n\nreturn redirect()'
 
     # write route for tracking email opens
     routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
     routes_content += '\ndef pixel(tracker):'
-    routes_content += '\n\tif tracker is not None:'
-    routes_content += '\n\t\treport_action(tracker, \'Opened\', request.remote_addr)'
-    routes_content += '\n\treturn app.send_static_file(\'pixel.png\')'
+    routes_content += '\n    if tracker is not None:'
+    routes_content += '\n        report_action(tracker, \'Opened\', request.remote_addr)'
+    routes_content += '\n    return app.send_static_file(\'pixel.png\')'
 
     # if payload used, app route to deliver payload
     if uses_payload:
         routes_content += '\n\n\n@app.route(payload_url)'
         routes_content += '\ndef payload():'
-        routes_content += '\n\tid = request.args.get(\'id\')'
-        routes_content += '\n\tif id is not None:'
-        routes_content += '\n\t\treport_action(id, \'Downloaded\', request.remote_addr)'
-        routes_content += '\n\treturn app.send_static_file(payload_file)'
+        routes_content += '\n    id = request.args.get(\'id\')'
+        routes_content += '\n    if id is not None:'
+        routes_content += '\n        report_action(id, \'Downloaded\', request.remote_addr)'
+        routes_content += '\n    return app.send_static_file(payload_file)'
 
     # create campaigns/<id>/app/routes.py
-    routes_template = Template(open(os.path.join(app_dir, 'templates', 'routes.txt')).read())
     with open(os.path.join(campaign_dir, 'app', 'routes.py'), 'w') as f:
         f.write(routes_content)
 
