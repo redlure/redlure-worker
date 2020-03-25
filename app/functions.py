@@ -86,12 +86,12 @@ def write_to_disk(campaign):
 
     # add 1 extra url route for form collection/redirect
     page_count = len(campaign['pages']) + 1
-    routes_content += f'\nurl_{page_count} = url_{page_count - 1}/2'
+    routes_content += f'\nurl_{page_count} = url_{page_count - 1} + \'/2\''
 
     # create templates in campaigns/<id>/templates
     for idx, page in enumerate(campaign['pages']):
         routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
-        routes_content += f'\ndef url{idx + 1}():'
+        routes_content += f'\ndef url_{idx + 1}():'
         routes_content += '\n    id = request.args.get(\'id\')'
         
         # if first route, report clicks
@@ -103,8 +103,10 @@ def write_to_disk(campaign):
             routes_content += '\n    if request.form:'
             routes_content += '\n        report_form(id, request.form, request.remote_addr)'
         
-        
-        routes_content += f'\n\n    return render_template({idx + 1}.html, next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
+        if uses_payload:
+            routes_content += f'\n\n    return render_template(\'{idx + 1}.html\', next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
+        else:
+            routes_content += f'\n\n    return render_template(\'{idx + 1}.html\', next_url = base_url + url_for(\'url_{idx + 2}\', id=id))'
 
         # write html template file
         template_name = f'{idx + 1}.html'
@@ -113,11 +115,14 @@ def write_to_disk(campaign):
 
     # write extra route for form collection/redirect
     routes_content += f'\n\n\n@app.route(url_{page_count}, methods=[\'POST\'])'
-    routes_content += f'\ndef url{page_count}():'
+    routes_content += f'\ndef url_{page_count}():'
     routes_content += '\n    id = request.args.get(\'id\')'
     routes_content += '\n    if request.form:'
     routes_content += '\n        report_form(id, request.form, request.remote_addr)'
-    routes_content += f'\n\nreturn redirect()'
+    if campaign['redirect_url']:
+        routes_content += f'\n\n    return redirect(redirect_url)'
+    else:
+        routes_content += '\n\n    return redirect(url_for(url_1, id=id))'
 
     # write route for tracking email opens
     routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
