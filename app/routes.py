@@ -2,7 +2,7 @@
 from app import app
 from flask import request, jsonify
 from app.models import CampaignSchema
-from helper.functions import write_to_disk, require_api_key, check_procs
+from app.functions import write_to_disk, require_api_key, check_procs
 import subprocess
 import os
 import signal
