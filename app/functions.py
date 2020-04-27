@@ -88,7 +88,12 @@ def write_to_disk(campaign):
     page_count = len(campaign['pages']) + 1
     routes_content += f'\nurl_{page_count} = url_{page_count - 1} + \'/2\''
 
-    # create templates in campaigns/<id>/templates
+    # add route from / to first page
+    routes_content += '\n\n@app.route(\'/\')'
+    routes_content +=  '\ndef index():'
+    routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
+
+    # create templates in campaigns/<id>/templates and routing
     for idx, page in enumerate(campaign['pages']):
         routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
         routes_content += f'\ndef url_{idx + 1}():'
