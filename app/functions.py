@@ -6,6 +6,7 @@ from shutil import copyfile
 from flask import request, abort
 from string import Template
 import psutil
+import requests
 from signal import SIGTERM
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
@@ -183,3 +184,13 @@ def check_procs(port, kill=False):
                 else:
                     return proc
 
+def contact_console():
+    params = {'key': Config.API_KEY}
+    try:
+        r = requests.post(f'https://{Config.SERVER_IP}:{Config.SERVER_PORT}/status', params=params, verify=False, timeout=5)
+    except:
+        return False
+    if r.status_code == 200:
+        return True
+    else:
+        return False

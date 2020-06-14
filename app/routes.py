@@ -2,7 +2,7 @@
 from app import app
 from flask import request, jsonify
 from app.models import CampaignSchema
-from app.functions import write_to_disk, require_api_key, check_procs
+from app.functions import write_to_disk, require_api_key, check_procs, contact_console
 import subprocess
 import os
 import signal
@@ -75,9 +75,13 @@ def kill():
 @app.route('/status', methods=['POST'])
 @require_api_key
 def status():
-    app.logger.info('Returned positive connection status')
-    return 'responsive', 200
-
+    app.logger.info('Received check-in from console')
+    if contact_console():
+        app.logger.info('Checked in with console')
+        return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
+    else:
+        app.logger.warning('Unable to check-in with console. Firewall may be blocking traffic')
+        return json.dumps({'success': False, 'msg': 'Worker to console comms failed.'}), 200, {'ContentType':'application/json'}
 
 @app.route('/certificates/generate', methods=['POST'])
 @require_api_key
