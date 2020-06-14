@@ -117,7 +117,7 @@ def write_to_disk(campaign):
         if idx != 0:
             render_temp += ', loginfmt=loginfmt, email=email, username=username'
         if uses_payload:
-            render_temp += f', serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\')'
+            render_temp += f', payload_url=base_url + url_for("payload", id=id), serve_payload = Markup(\'<meta http-equiv="refresh" content="0; url=\' + base_url + url_for("payload", id=id) + \'">\')'
         render_temp += ')'
 
         routes_content += render_temp
