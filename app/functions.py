@@ -103,11 +103,11 @@ def write_to_disk(campaign):
         # if first route, report clicks
         if idx == 0:
             routes_content += '\n    if id is not None:'
-            routes_content += '\n        report_action(id, \'Clicked\', request.remote_addr)'
+            routes_content += '\n        report_action(id, \'Clicked\', request.remote_addr, request.headers.get(\'User-Agent\'))'
         # else report form submissions and grab username/email/loginfmt
         else:
             routes_content += '\n    if request.form:'
-            routes_content += '\n        report_form(id, request.form, request.remote_addr)'
+            routes_content += '\n        report_form(id, request.form, request.remote_addr, request.headers.get(\'User-Agent\'))'
             routes_content += '\n    loginfmt = request.form.get(\'loginfmt\')'
             routes_content += '\n    email = request.form.get(\'email\')'
             routes_content += '\n    username = request.form.get(\'username\')'
@@ -132,7 +132,7 @@ def write_to_disk(campaign):
     routes_content += f'\ndef url_{page_count}():'
     routes_content += '\n    id = request.args.get(\'id\')'
     routes_content += '\n    if request.form:'
-    routes_content += '\n        report_form(id, request.form, request.remote_addr)'
+    routes_content += '\n        report_form(id, request.form, request.remote_addr, request.headers.get(\'User-Agent\'))'
     if campaign['redirect_url'] != 'null':
         routes_content += f'\n\n    return redirect(redirect_url)'
     else:
@@ -142,7 +142,7 @@ def write_to_disk(campaign):
     routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
     routes_content += '\ndef pixel(tracker):'
     routes_content += '\n    if tracker is not None:'
-    routes_content += '\n        report_action(tracker, \'Opened\', request.remote_addr)'
+    routes_content += '\n        report_action(tracker, \'Opened\', request.remote_addr, request.headers.get(\'User-Agent\'))'
     routes_content += '\n    return app.send_static_file(\'pixel.png\')'
 
     # if payload used, app route to deliver payload
@@ -151,7 +151,7 @@ def write_to_disk(campaign):
         routes_content += '\ndef payload():'
         routes_content += '\n    id = request.args.get(\'id\')'
         routes_content += '\n    if id is not None:'
-        routes_content += '\n        report_action(id, \'Downloaded\', request.remote_addr)'
+        routes_content += '\n        report_action(id, \'Downloaded\', request.remote_addr, request.headers.get(\'User-Agent\'))'
         routes_content += '\n    return app.send_static_file(payload_file)'
 
     # create campaigns/<id>/app/routes.py

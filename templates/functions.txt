@@ -12,13 +12,13 @@ from config import Config
 
 
 # report email open, click, or download to the redlure-console
-def report_action(tracker, action, ip):
+def report_action(tracker, action, ip, user_agent):
     '''
     Report a hit on /static/pixel.png or a click for a target ID to the redlure server
     '''
     url = 'https://%s:%d/results/update' % (Config.SERVER_IP, Config.SERVER_PORT)
     params = {'key': Config.API_KEY}
-    payload = {'tracker': tracker, 'action': action, 'ip': ip}
+    payload = {'tracker': tracker, 'action': action, 'ip': ip, 'user-agent': user_agent}
     try:
         r = requests.post(url, data=payload, params=params, verify=False)
     except:
@@ -26,14 +26,14 @@ def report_action(tracker, action, ip):
 
 
 # report form data to the redlure-console
-def report_form(tracker, form_data, ip):
+def report_form(tracker, form_data, ip, user_agent):
     '''
     Report a form submission with a target ID to the redlure server
     '''
     data = json.dumps(form_data.to_dict(flat=False))
     url = 'https://%s:%d/results/form' % (Config.SERVER_IP, Config.SERVER_PORT)
     params = {'key': Config.API_KEY}
-    payload = {'tracker': tracker, 'data': data, 'ip': ip}
+    payload = {'tracker': tracker, 'data': data, 'ip': ip, 'user-agent': user_agent}
     try:
         r = requests.post(url, data=payload, params=params, verify=False)
     except:
