@@ -12,7 +12,7 @@ import shlex
 import json
 import socket
 from socket import AF_INET, SOCK_STREAM, SOCK_DGRAM
-from werkzeug.utils import secure_filename
+from werkzeug import secure_filename
 from config import Config
 
 @app.route('/campaigns/start', methods=['POST'])
