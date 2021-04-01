@@ -39,16 +39,17 @@ def start():
 
     # start the subprocess running the campaign's gunicorn server
     chdir = 'campaigns/%d' % campaign['id']
+    logfile = f'{chdir}/gunicorn3.log'
     if campaign['ssl']:
         if not os.path.exists(cert) or not os.path.exists(key):
             app.logger.warning(f'Failed to start campaign {id}. Error accessing cert file {cert} or key file {key}')
             shutil.rmtree('campaigns/%s' % str(int(id)))
             return json.dumps({'success': False, 'msg': 'Failed: Error accessing cert/key files'}), 200, {'ContentType':'application/json'}
         app.logger.info(f'Starting campaign {id} with SSL on port {port}')
-        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s' % (chdir, port, key, cert)))
+        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --keyfile %s --certfile %s --log-file %s --capture-output --access-logfile %s' % (chdir, port, key, cert, logfile, logfile)))
     else:
         app.logger.info(f'Starting campaign {id} without SSL on port {port}')
-        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon' % (chdir, port)))
+        subprocess.Popen(shlex.split('gunicorn3 --chdir %s app:app -b 0.0.0.0:%s --daemon --log-file %s --capture-output --access-logfile %s' % (chdir, port, logfile, logfile)))
 
     return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
 
