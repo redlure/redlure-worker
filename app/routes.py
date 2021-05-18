@@ -39,7 +39,12 @@ def start():
 
     # start the subprocess running the campaign's gunicorn server
     chdir = 'campaigns/%d' % campaign['id']
-    logfile = f'{chdir}/gunicorn3.log'
+    logfile = os.path.abspath(f'{chdir}/gunicorn3.log')
+
+    # create the logfile
+    with open(logfile, 'w') as f:
+        pass
+
     if campaign['ssl']:
         if not os.path.exists(cert) or not os.path.exists(key):
             app.logger.warning(f'Failed to start campaign {id}. Error accessing cert file {cert} or key file {key}')
