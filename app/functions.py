@@ -37,7 +37,7 @@ def write_to_disk(campaign):
         os.mkdir(os.path.join(campaign_dir, 'app', 'templates'))
     if not os.path.isdir(os.path.join(campaign_dir, 'app', 'static')):
         os.mkdir(os.path.join(campaign_dir, 'app', 'static'))
-    copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'pixel.png'))
+    copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'logo.png'))
 
     # copy all files from the upload dir to the static folder
     if os.path.isdir(Config.UPLOAD_FOLDER):
@@ -139,11 +139,11 @@ def write_to_disk(campaign):
         routes_content += '\n\n    return redirect(url_for(\'url_1\', id=id))'
 
     # write route for tracking email opens
-    routes_content += f'\n\n\n@app.route(\'/<tracker>/pixel.png\')'
+    routes_content += f'\n\n\n@app.route(\'/default/<tracker>/logo.png\')'
     routes_content += '\ndef pixel(tracker):'
     routes_content += '\n    if tracker is not None:'
     routes_content += '\n        report_action(tracker, \'Opened\', request.remote_addr, request.headers.get(\'User-Agent\'))'
-    routes_content += '\n    return app.send_static_file(\'pixel.png\')'
+    routes_content += '\n    return app.send_static_file(\'logo.png\')'
 
     # if payload used, app route to deliver payload
     if uses_payload:
