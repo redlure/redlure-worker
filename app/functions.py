@@ -89,10 +89,21 @@ def write_to_disk(campaign):
     page_count = len(campaign['pages']) + 1
     routes_content += f'\nurl_{page_count} = url_{page_count - 1} + \'/2\''
 
-    # add route from / to first page
+    # add route from / to first page or safety URL, if supplied
     routes_content += '\n\n@app.route(\'/\')'
     routes_content +=  '\ndef index():'
-    routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
+    if campaign['safety_url'] != 'null':
+        routes_content +=  f'\n    return redirect(\'{campaign["safety_url"]}\')'
+    else:
+        routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
+
+    # 404 handler route, redirects to first page or safety URL, if supplied
+    routes_content += '\n\n@app.errorhandler(404)'
+    routes_content += '\ndef page_not_found(e):'
+    if campaign['safety_url'] != 'null':
+        routes_content +=  f'\n    return redirect(\'{campaign["safety_url"]}\')'
+    else:
+        routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
 
     # create templates in campaigns/<id>/templates and routing
     for idx, page in enumerate(campaign['pages']):
