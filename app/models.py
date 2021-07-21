@@ -101,6 +101,7 @@ class CampaignSchema(Schema):
     name = fields.Str()
     pages = fields.Nested(CampaignpagesSchema, strict=True, many=True)
     redirect_url = fields.Str(allow_none=True)
+    safety_url = fields.Str(allow_none=True)
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
     port = fields.Number()
