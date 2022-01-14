@@ -7,6 +7,7 @@ from flask import request, abort
 from string import Template
 import psutil
 import requests
+from app.models import WORKER_VERSION
 from signal import SIGTERM
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
@@ -184,13 +185,26 @@ def check_procs(port, kill=False):
                 else:
                     return proc
 
-def contact_console():
-    params = {'key': Config.API_KEY}
+def contact_console(interact):
+    params = {'key': Config.API_KEY, 'version': WORKER_VERSION}
     try:
         r = requests.post(f'https://{Config.SERVER_IP}:{Config.SERVER_PORT}/status', params=params, verify=False, timeout=5)
     except:
         return False
-    if r.status_code == 200:
-        return True
+
+    if r.content.decode() == 'unsupported':
+        if interact:
+            print('[-] This version of the redlure worker is unsupported by your console')
+        else:
+            return 2
+    elif r.status_code == 200:
+        if interact:
+            print('[+] Successfully checked in with console')
+        else:
+            return 1
     else:
-        return False
+        if interact:
+            print('[-] Failed console check-in. Console may not be running or firewall is blocking communication\n')
+            input('[ Press enter to continue booting the worker ]')
+        else:
+            return 0

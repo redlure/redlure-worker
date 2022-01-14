@@ -82,10 +82,15 @@ def kill():
 @require_api_key
 def status():
     app.logger.info('Received check-in from console')
-    if contact_console():
+    console_code = contact_console(False)
+
+    if console_code == 2:
+        app.logger.warning('Worker is unsupported by console. Update worker')
+        return json.dumps({'success': False, 'msg': 'Unsupported worker version'}), 200, {'ContentType':'application/json'}
+    elif console_code == 1:
         app.logger.info('Checked in with console')
         return json.dumps({'success': True}), 200, {'ContentType':'application/json'}
-    else:
+    elif console_code == 0:
         app.logger.warning('Unable to check-in with console. Firewall may be blocking traffic')
         return json.dumps({'success': False, 'msg': 'Worker to console comms failed.'}), 200, {'ContentType':'application/json'}
 

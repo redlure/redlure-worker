@@ -6,6 +6,7 @@ import shlex
 from config import Config
 import shutil
 from app.functions import contact_console
+from app.models import WORKER_VERSION
 import urllib3
 
 # Suppress insecure requests warning
@@ -26,12 +27,9 @@ if __name__ == '__main__':
         if not os.path.isfile('redlure-cert.pem') or not os.path.isfile('redlure-key.pem'):
             gen_certs()
 
+    print(f'[*] redlure-worker v{WORKER_VERSION}')
     print(f'[*] Contacting the redlure console at https://{Config.SERVER_IP}:{Config.SERVER_PORT}')
-    if contact_console():
-        print('[+] Successfully checked in with console')
-    else:
-        print('[-] Failed console check-in. Console may not be running or firewall is blocking communication\n')
-        input('[ Press enter to continue booting the worker ]')
+    contact_console(True)
 
     # start the server
     #subprocess.Popen(['gunicorn', 'redlure-worker:app', '-b 0.0.0.0:8000', '--certfile', 'redlure-cert.pem', '--keyfile', 'redlure-key.pem'])
