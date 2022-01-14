@@ -10,7 +10,7 @@ import shutil
 from binascii import hexlify
 import requests
 
-WORKER_VERSION = '0.1'
+WORKER_VERSION = '0.11'
 
 class WorkspaceSchema(Schema):
     id = fields.Number()
