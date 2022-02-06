@@ -103,7 +103,7 @@ def generate_cert():
         if b'not yet due for renewal' in proc.stdout:
             app.logger.info(f'Attemped to renew cert for {domain} but not yet due for renewal')
             return json.dumps({'success': False, 'msg': 'Certificate not due for renewal'}), 200, {'ContentType':'application/json'}
-        elif b'Congratulations!' in proc.stdout:
+        elif b'Congratulations!' in proc.stdout or b'Successfully received certificate' in proc.stdout:
             cert_path = f'/etc/letsencrypt/live/{domain}/cert.pem'
             key_path = f'/etc/letsencrypt/live/{domain}/privkey.pem'
             return json.dumps({'success': True, 'cert_path': cert_path, 'key_path': key_path}), 200, {'ContentType':'application/json'}
