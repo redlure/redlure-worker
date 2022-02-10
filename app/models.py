@@ -10,7 +10,7 @@ import shutil
 from binascii import hexlify
 import requests
 
-WORKER_VERSION = '0.1'
+WORKER_VERSION = '0.11'
 
 class WorkspaceSchema(Schema):
     id = fields.Number()
@@ -101,6 +101,7 @@ class CampaignSchema(Schema):
     name = fields.Str()
     pages = fields.Nested(CampaignpagesSchema, strict=True, many=True)
     redirect_url = fields.Str(allow_none=True)
+    safety_url = fields.Str(allow_none=True)
     domain = fields.Nested(DomainSchema, strict=True)
     server = fields.Nested(ServerSchema, strict=True)
     port = fields.Number()

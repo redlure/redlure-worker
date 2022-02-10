@@ -2,7 +2,7 @@
 The redlure-worker is a small API that hosts phishing sites and sends data back to your redlure-console. redlure is designed to have multiple redlure-workers working in conjunction with a single redlure-console.
 
 ## redlure documentation
-General redlure info and the main redlure wiki is on the [redlure-console](https://github.com/redlure/redlure-console) page.
+Documentation is hosted at [docs.redlure.io](https://docs.redlure.io) and general redlure info is on the [redlure-console](https://github.com/redlure/redlure-console) GitHub page.
 
 ## Installation
-Visit the [wiki](https://github.com/redlure/redlure-worker/wiki) in this repository for [installation instructions](https://github.com/redlure/redlure-worker/wiki/Installation) and basic worker information.
+[Installation instructions](https://docs.redlure.io/redlure-worker/Installation.html) can be found on the GitBooks docs site.
