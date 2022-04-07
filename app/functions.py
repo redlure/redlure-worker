@@ -124,7 +124,7 @@ def write_to_disk(campaign):
             routes_content += f"\n    ipinfo_apikey = \'{Config.IPINFO_API_KEY}\'"
             routes_content += "\n    ipinfo_handler = ipinfo.getHandler(ipinfo_apikey)"
             routes_content += "\n    ip = request.environ[\'REMOTE_ADDR\']"
-            routes_content += "\n    ip_details = handler.getDetails(ip)"
+            routes_content += "\n    ip_details = ipinfo_handler.getDetails(ip)"
             routes_content += "\n    for b in bad:"
             routes_content += "\n       if b in ip_details.org.lower():"
 
