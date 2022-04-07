@@ -115,21 +115,21 @@ def write_to_disk(campaign):
         routes_content += f'\ndef url_{idx + 1}():'
         routes_content += '\n    id = request.args.get(\'id\')'
 
-        if config.IPINFO_API_KEY == '':
+        if Config.IPINFO_API_KEY == '':
             continue
-        if config.BAD_ORGS == '':
+        if Config.BAD_ORGS == '':
             continue
         else:
-            routes_content += f"\n    bad = [line.strip() for line in open({config.BAD_ORGS})]"
-            routes_content += f"\n    ipinfo_apikey = {config.IPINFO_API_KEY}"
+            routes_content += f"\n    bad = [line.strip() for line in open(\'{Config.BAD_ORGS}\')]"
+            routes_content += f"\n    ipinfo_apikey = \'{Config.IPINFO_API_KEY}\'"
             routes_content += "\n    ipinfo_handler = ipinfo.getHandler(ipinfo_apikey)"
-            routes_content += "\n    ip = request.environ['REMOTE_ADDR']"
+            routes_content += "\n    ip = request.environ[\'REMOTE_ADDR\']"
             routes_content += "\n    ip_details = handler.getDetails(ip)"
             routes_content += "\n    for b in bad:"
             routes_content += "\n       if b in ip_details.org.lower():"
 
             # Sending the bad request to itself cause why not
-            routes_content += "\n           return redirect(f'https://{ip}', code=302)"
+            routes_content += "\n           return redirect(f\'https://{ip}\', code=302)"
             routes_content += "\n    else:" 
             routes_content += "\n       pass" 
 
