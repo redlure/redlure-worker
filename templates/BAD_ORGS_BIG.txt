@@ -15,6 +15,7 @@ ambion
 anexia
 anonymizer
 ansluten
+apple
 aquaray
 areti
 ariawebco
@@ -36,6 +37,7 @@ atnethost
 atom
 atom86
 autonomous
+avast
 axcelx
 bandwidth
 bare
@@ -46,6 +48,7 @@ best
 beyond
 bhost
 bird
+bitdefender
 bitflux
 biznes
 biznesshosting
@@ -92,6 +95,7 @@ colocation
 colocrossing
 colombia
 coloup
+comodo
 comvive
 contabo
 contina
@@ -223,6 +227,7 @@ hostnordic
 hostpoint
 hostpro
 hostrightnow
+hostroyale
 hostspace
 hostus
 hostway
@@ -329,9 +334,9 @@ netgate
 netmagic
 netstack
 netwise
-network
 netzbetrieb
 newmediaexpress
+nexeon
 next
 nforce
 ngcom
@@ -360,6 +365,7 @@ pekitel
 penta
 pghosting
 phase3tel
+phish
 phmgmt
 planethoster
 plusserver
@@ -403,6 +409,7 @@ santa
 secura
 securedservers
 securitylayer
+selectel
 server
 server4you
 serverastra
@@ -459,7 +466,9 @@ thecable
 theopt
 thinksystemsuk
 thordc
+tier.net
 todayhost
+tor
 total
 trabia
 tranquil
