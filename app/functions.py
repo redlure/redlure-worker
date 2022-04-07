@@ -10,7 +10,8 @@ import requests
 from app.models import WORKER_VERSION
 from signal import SIGTERM
 
-app_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+app_dir = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
 
 def write_to_disk(campaign):
@@ -18,7 +19,7 @@ def write_to_disk(campaign):
     Create a Flask app on disk with the data provided by the server
     '''
     # will hold the contents of campaigns/<id>/app/routes.txt
-    routes_content = 'from app import app\nfrom flask import request, jsonify, render_template, url_for, redirect, Markup\nimport os\nimport sys\nfrom app.functions import report_action, report_form'
+    routes_content = 'from app import app\nfrom flask import request, jsonify, render_template, url_for, redirect, Markup\nimport os\nimport sys\nimport ipinfo\nfrom app.functions import report_action, report_form'
 
     # create campaigns folder if it doesnt exist
     if not os.path.isdir(os.path.join(app_dir, 'campaigns')):
@@ -38,12 +39,14 @@ def write_to_disk(campaign):
         os.mkdir(os.path.join(campaign_dir, 'app', 'templates'))
     if not os.path.isdir(os.path.join(campaign_dir, 'app', 'static')):
         os.mkdir(os.path.join(campaign_dir, 'app', 'static'))
-    copyfile(os.path.join(app_dir, 'templates', 'pixel.png'), os.path.join(campaign_dir, 'app', 'static', 'logo.png'))
+    copyfile(os.path.join(app_dir, 'templates', 'pixel.png'),
+             os.path.join(campaign_dir, 'app', 'static', 'logo.png'))
 
     # copy all files from the upload dir to the static folder
     if os.path.isdir(Config.UPLOAD_FOLDER):
         for file in os.listdir(Config.UPLOAD_FOLDER):
-            copyfile(os.path.join(Config.UPLOAD_FOLDER, file), os.path.join(campaign_dir, 'app', 'static', file))
+            copyfile(os.path.join(Config.UPLOAD_FOLDER, file),
+                     os.path.join(campaign_dir, 'app', 'static', file))
 
     # create campaigns/<id>/app.py
     with open(os.path.join(campaign_dir, 'app.py'), 'w') as f:
@@ -92,25 +95,43 @@ def write_to_disk(campaign):
 
     # add route from / to first page or safety URL, if supplied
     routes_content += '\n\n@app.route(\'/\')'
-    routes_content +=  '\ndef index():'
+    routes_content += '\ndef index():'
     if campaign['safety_url'] != 'null':
-        routes_content +=  f'\n    return redirect(\'{campaign["safety_url"]}\')'
+        routes_content += f'\n    return redirect(\'{campaign["safety_url"]}\')'
     else:
-        routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
+        routes_content += '\n    return redirect(url_for(\'url_1\'))'
 
     # 404 handler route, redirects to first page or safety URL, if supplied
     routes_content += '\n\n@app.errorhandler(404)'
     routes_content += '\ndef page_not_found(e):'
     if campaign['safety_url'] != 'null':
-        routes_content +=  f'\n    return redirect(\'{campaign["safety_url"]}\')'
+        routes_content += f'\n    return redirect(\'{campaign["safety_url"]}\')'
     else:
-        routes_content +=  '\n    return redirect(url_for(\'url_1\'))'
+        routes_content += '\n    return redirect(url_for(\'url_1\'))'
 
     # create templates in campaigns/<id>/templates and routing
     for idx, page in enumerate(campaign['pages']):
         routes_content += f'\n\n\n@app.route(url_{idx + 1}, methods=[\'GET\', \'POST\'])'
         routes_content += f'\ndef url_{idx + 1}():'
         routes_content += '\n    id = request.args.get(\'id\')'
+
+        if config.IPINFO_API_KEY == '':
+            continue
+        if config.BAD_ORGS == '':
+            continue
+        else:
+            routes_content += f"\n    bad = [line.strip() for line in open({config.BAD_ORGS})]"
+            routes_content += f"\n    ipinfo_apikey = {config.IPINFO_API_KEY}"
+            routes_content += "\n    ipinfo_handler = ipinfo.getHandler(ipinfo_apikey)"
+            routes_content += "\n    ip = request.environ['REMOTE_ADDR']"
+            routes_content += "\n    ip_details = handler.getDetails(ip)"
+            routes_content += "\n    for b in bad:"
+            routes_content += "\n       if b in ip_details.org.lower():"
+
+            # Sending the bad request to itself cause why not
+            routes_content += "\n           return redirect(f'https://{ip}', code=302)"
+            routes_content += "\n    else:" 
+            routes_content += "\n       pass" 
 
         # if first route, report clicks
         if idx == 0:
@@ -196,16 +217,19 @@ def check_procs(port, kill=False):
                 else:
                     return proc
 
+
 def contact_console(interact):
     params = {'key': Config.API_KEY, 'version': WORKER_VERSION}
     try:
-        r = requests.post(f'https://{Config.SERVER_IP}:{Config.SERVER_PORT}/status', params=params, verify=False, timeout=5)
+        r = requests.post(
+            f'https://{Config.SERVER_IP}:{Config.SERVER_PORT}/status', params=params, verify=False, timeout=5)
     except:
         return False
 
     if r.content.decode() == 'unsupported':
         if interact:
-            print('[-] This version of the redlure worker is unsupported by your console')
+            print(
+                '[-] This version of the redlure worker is unsupported by your console')
         else:
             return 2
     elif r.status_code == 200:
@@ -215,7 +239,8 @@ def contact_console(interact):
             return 1
     else:
         if interact:
-            print('[-] Failed console check-in. Console may not be running or firewall is blocking communication\n')
+            print(
+                '[-] Failed console check-in. Console may not be running or firewall is blocking communication\n')
             input('[ Press enter to continue booting the worker ]')
         else:
             return 0
