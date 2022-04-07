@@ -19,6 +19,7 @@ trustwave
 watchguard
 zscaler
 google
+hostus
 microsoft
 proofpoint
 amazon
