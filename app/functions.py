@@ -115,18 +115,21 @@ def write_to_disk(campaign):
         routes_content += f'\ndef url_{idx + 1}():'
         routes_content += '\n    id = request.args.get(\'id\')'
 
+        # Checking if API key and bad org list specified in config file 
         if Config.IPINFO_API_KEY == '':
             continue
         if Config.BAD_ORGS == '':
             continue
+
+        # Adding redirect block if both config options are set
         else:
             routes_content += f"\n    bad = [line.strip() for line in open(\'{Config.BAD_ORGS}\')]"
             routes_content += f"\n    ipinfo_apikey = \'{Config.IPINFO_API_KEY}\'"
             routes_content += "\n    ipinfo_handler = ipinfo.getHandler(ipinfo_apikey)"
             routes_content += "\n    ip = request.environ[\'REMOTE_ADDR\']"
             routes_content += "\n    ip_details = ipinfo_handler.getDetails(ip)"
-            routes_content += "\n    for b in bad:"
-            routes_content += "\n       if b in ip_details.org.lower():"
+            routes_content += "\n    for org in bad:"
+            routes_content += "\n       if org in ip_details.org.lower():"
 
             # Sending the bad request to itself cause why not
             routes_content += "\n           return redirect(f\'https://{ip}\', code=302)"
