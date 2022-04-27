@@ -6,3 +6,5 @@ class Config(object):
     SERVER_IP = '' # IP or domain name of your redlure-console
     SERVER_PORT = 5000
     UPLOAD_FOLDER = '/tmp/redlure/uploads'
+    IPINFO_API_KEY = ''
+    BAD_ORGS = ''
